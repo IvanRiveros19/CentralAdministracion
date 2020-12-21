@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import javax.swing.JOptionPane;
 
-public class conexionBD {
+public class Conexion {
 
     private String driver = "com.mysql.cj.jdbc.Driver";
     private String database = "CentralAutobuses";
@@ -14,15 +14,21 @@ public class conexionBD {
     private String username = "root";
     private String password = "toor";
 
-    static public Connection conexion;
-    
-    public conexionBD() {
+    private static Connection connection = null;
+
+    public Conexion() {
         try {
             Class.forName(driver);
-            conexion = DriverManager.getConnection(url, username, password);
-            System.out.println("conectdo");
+            connection = DriverManager.getConnection(url, username, password);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, "No Se Puede Conectar A Su Base De Datos " + ex);
+            JOptionPane.showMessageDialog(null, "Error al conextar con la Base De Datos " + ex);
         }
+    }
+
+    public static Connection getConnection() {
+        if (connection == null) {
+            new Conexion();
+        }
+        return this.connection;
     }
 }
