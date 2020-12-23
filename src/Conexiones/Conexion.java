@@ -16,7 +16,7 @@ public class Conexion {
 
     private static Connection connection = null;
 
-    public Conexion() {
+    private Conexion() {
         try {
             Class.forName(driver);
             connection = DriverManager.getConnection(url, username, password);
@@ -29,6 +29,6 @@ public class Conexion {
         if (connection == null) {
             new Conexion();
         }
-        return this.connection;
+        return connection;
     }
 }

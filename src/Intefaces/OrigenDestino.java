@@ -1,6 +1,6 @@
 package Intefaces;
 
-import Conexiones.conexionBD;
+import Conexiones.Conexion;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -14,7 +14,7 @@ import javax.swing.table.DefaultTableModel;
 public class OrigenDestino extends javax.swing.JFrame {
 
     Principal principal = new Principal();
-    conexionBD cbd = new conexionBD();
+    Connection conexion = Conexion.getConnection();
     private int filaSelect = -1;
     String instruc, oldPass;
     int number;
@@ -124,7 +124,7 @@ public class OrigenDestino extends javax.swing.JFrame {
     public void tomarID() {
         try {
             String instruccion = "select id from OrigenDestino where nombre ='" + oldPass + "'";
-            Statement stmt = cbd.conexion.createStatement();
+            Statement stmt = conexion.createStatement();
             stmt.executeQuery(instruccion);
             ResultSet rs = stmt.getResultSet();
 
@@ -145,7 +145,7 @@ public class OrigenDestino extends javax.swing.JFrame {
 
         try {
             String instruccion = "select id from Empresa where nombre ='" + oldPass + "'";
-            Statement stmt = cbd.conexion.createStatement();
+            Statement stmt = conexion.createStatement();
             stmt.executeQuery(instruccion);
             ResultSet rs = stmt.getResultSet();
 
@@ -178,7 +178,7 @@ public class OrigenDestino extends javax.swing.JFrame {
 
         try {
             String instruccion = instruc;
-            Statement stmt = cbd.conexion.createStatement();
+            Statement stmt = conexion.createStatement();
             stmt.executeQuery(instruccion);
             ResultSet rs = stmt.getResultSet();
 
@@ -199,8 +199,8 @@ public class OrigenDestino extends javax.swing.JFrame {
 //----------------------------------------------------------------------------------------    
     public void insertarOrigenDestino(String nom, String tipo) {
         try {
-            String instruccion = "INSERT INTO `OrigenDestino` VALUES ('" + nom + "','" + tipo + "');";
-            PreparedStatement s = cbd.conexion.prepareStatement(instruccion);
+            String instruccion = "INSERT INTO `OrigenDestino` VALUES (NULL,'" + nom + "','" + tipo + "');";
+            PreparedStatement s = conexion.prepareStatement(instruccion);
             s.executeUpdate();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);
@@ -211,7 +211,7 @@ public class OrigenDestino extends javax.swing.JFrame {
         try {
 
             String instruccion = "UPDATE OrigenDestino Set nombre ='" + nombreM + "' where id =" + idM + " and nombre = @NombreOD";
-            PreparedStatement s = cbd.conexion.prepareStatement(instruccion);
+            PreparedStatement s = conexion.prepareStatement(instruccion);
             s.executeUpdate();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);
@@ -221,7 +221,7 @@ public class OrigenDestino extends javax.swing.JFrame {
     public void eliminarOrigenDestino(String nom) {
         try {
             String instruccion = "delete from OrigenDestino where nombre ='" + nom + "'";
-            PreparedStatement s = cbd.conexion.prepareStatement(instruccion);
+            PreparedStatement s = conexion.prepareStatement(instruccion);
             s.executeUpdate();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);
@@ -231,8 +231,8 @@ public class OrigenDestino extends javax.swing.JFrame {
 
     public void insertarEmpresa(String nombreEmp) {
         try {
-            String instruccion = "INSERT INTO Empresa VALUES ('" + nombreEmp + "');";
-            PreparedStatement s = cbd.conexion.prepareStatement(instruccion);
+            String instruccion = "INSERT INTO Empresa VALUES (NULL,'" + nombreEmp + "');";
+            PreparedStatement s = conexion.prepareStatement(instruccion);
             s.executeUpdate();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);
@@ -242,7 +242,7 @@ public class OrigenDestino extends javax.swing.JFrame {
     public void modificarEmpresa(int idEmp, String nombreEmp) {
         try {
             String instruccion = "UPDATE Empresa Set nombre ='" + nombreEmp + "' where id = '" + idEmp + "';";
-            PreparedStatement s = cbd.conexion.prepareStatement(instruccion);
+            PreparedStatement s = conexion.prepareStatement(instruccion);
             s.executeUpdate();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);
@@ -252,7 +252,7 @@ public class OrigenDestino extends javax.swing.JFrame {
     public void eliminarEmpresa(String nomb) {
         try {
             String instruccion = "delete from Empresa where nombre ='" + nomb + "';";
-            PreparedStatement s = cbd.conexion.prepareStatement(instruccion);
+            PreparedStatement s = conexion.prepareStatement(instruccion);
             s.executeUpdate();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);

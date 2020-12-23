@@ -1,8 +1,9 @@
 package Intefaces;
 
-import Conexiones.conexionBD;
+import Conexiones.Conexion;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,7 +22,7 @@ import javax.swing.table.TableModel;
 public class Principal extends javax.swing.JFrame {
 
     
-    conexionBD cbd = new conexionBD();
+    Connection conexion = Conexion.getConnection();
     private int filaect = -1;
     String instruc;
     private int numeroPasajero = 1;
@@ -425,7 +426,7 @@ public class Principal extends javax.swing.JFrame {
         String horasalida = hora + ":" + minutos;
         try {
             String instruccion = "INSERT INTO `reporte` VALUES (NULL,'"+no+"','"+horasalida+"','"+origen+"','"+destino+"','"+empresa+"','"+tservicio+"','"+tcorrida+"','"+noeconomico+"','"+nopasajeros+"','"+noautobus+"', '"+fecha+"');";
-            PreparedStatement s = cbd.conexion.prepareStatement(instruccion);
+            PreparedStatement s = conexion.prepareStatement(instruccion);
             s.executeUpdate();
             JOptionPane.showMessageDialog(null, "Información agregada");
             } catch (Exception e) {
@@ -439,7 +440,7 @@ public class Principal extends javax.swing.JFrame {
         DefaultComboBoxModel model = new DefaultComboBoxModel();
         try {
             String instruccion = "SELECT `NOMBRE` FROM `OrigenDestino` WHERE `TIPO`='ORIGEN' ORDER BY nombre ASC";
-            Statement stmt = cbd.conexion.createStatement();
+            Statement stmt = conexion.createStatement();
             stmt.executeQuery(instruccion);
             ResultSet rs = stmt.getResultSet();
             while (rs.next()) {
@@ -456,7 +457,7 @@ public class Principal extends javax.swing.JFrame {
      DefaultComboBoxModel model = new DefaultComboBoxModel();
         try {
             String instruccion = "SELECT `NOMBRE` FROM `OrigenDestino` WHERE `TIPO`='DESTINO' ORDER BY `NOMBRE` ASC";
-            Statement stmt = cbd.conexion.createStatement();
+            Statement stmt = conexion.createStatement();
             stmt.executeQuery(instruccion);
             ResultSet rs = stmt.getResultSet();
             while (rs.next()) {
@@ -473,7 +474,7 @@ public class Principal extends javax.swing.JFrame {
         DefaultComboBoxModel model = new DefaultComboBoxModel();
         try {
             String instruccion = "SELECT `NOMBRE` FROM `empresa` ORDER BY `NOMBRE` ASC";
-            Statement stmt = cbd.conexion.createStatement();
+            Statement stmt = conexion.createStatement();
             stmt.executeQuery(instruccion);
             ResultSet rs = stmt.getResultSet();
             while (rs.next()) {
@@ -493,7 +494,7 @@ public class Principal extends javax.swing.JFrame {
        
         try {
             String instruccion = "SELECT * FROM `reporte` ORDER BY `FECHA`, `NUMERO` ASC";
-            Statement stmt = cbd.conexion.createStatement();
+            Statement stmt = conexion.createStatement();
             stmt.executeQuery(instruccion);
             ResultSet rs = stmt.getResultSet();
 
@@ -528,7 +529,7 @@ public class Principal extends javax.swing.JFrame {
     public void ConnsultaNoFech(String date){
         try {
             String instruccion = "SELECT max(NUMERO) FROM `reporte` WHERE `FECHA`='" + date + "';";
-            Statement stmt = cbd.conexion.createStatement();
+            Statement stmt = conexion.createStatement();
             stmt.executeQuery(instruccion);
             ResultSet rs = stmt.getResultSet();
             int maximo = 1;
