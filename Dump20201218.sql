@@ -3,6 +3,9 @@
 -- Host: localhost    Database: centralautobuses
 -- ------------------------------------------------------
 -- Server version	5.7.26-log
+create database CentralAutobuses;
+use CentralAutobuses;
+
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -113,3 +116,4 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2020-12-18 21:23:43
+SELECT * FROM Empresa;
