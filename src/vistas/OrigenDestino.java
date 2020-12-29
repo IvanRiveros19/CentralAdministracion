@@ -1,6 +1,6 @@
-package Intefaces;
+package vistas;
 
-import Conexiones.Conexion;
+import modelo.conexion.Conexion;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -12,11 +12,11 @@ import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 public class OrigenDestino extends javax.swing.JFrame {
-
-    Principal principal = new Principal();
+    private int id = 0;
+    Reporte principal = new Reporte();
     Connection conexion = Conexion.getConnection();
     private int filaSelect = -1;
-    String instruc, oldPass;
+    String sql, oldPass;
     int number;
 
     public OrigenDestino() {
@@ -31,11 +31,11 @@ public class OrigenDestino extends javax.swing.JFrame {
     }
 
     public void comparaTitulo() {
-        if (Principal.OpcionTitulo.equals("1")) {
+        if (Reporte.OpcionTitulo.equals("1")) {
             lblTitulo.setText("ORIGEN");
-        } else if (Principal.OpcionTitulo.equals("2")) {
+        } else if (Reporte.OpcionTitulo.equals("2")) {
             lblTitulo.setText("DESTINO");
-        } else if (Principal.OpcionTitulo.equals("3")) {
+        } else if (Reporte.OpcionTitulo.equals("3")) {
             lblTitulo.setText("EMPRESA");
         } else {
             lblTitulo.setText("No hay titulo");
@@ -169,15 +169,15 @@ public class OrigenDestino extends javax.swing.JFrame {
         model.setRowCount(0);
 
         if (lblTitulo.getText().equals("ORIGEN")) {
-            instruc = "SELECT id, nombre FROM OrigenDestino WHERE tipo = 'ORIGEN' ORDER BY nombre ASC";
+            sql = "SELECT id, nombre FROM OrigenDestino WHERE tipo = 'ORIGEN' ORDER BY nombre ASC";
         } else if (lblTitulo.getText().equals("DESTINO")) {
-            instruc = "SELECT id, nombre FROM OrigenDestino WHERE tipo = 'DESTINO' ORDER BY nombre ASC";
+            sql = "SELECT id, nombre FROM OrigenDestino WHERE tipo = 'DESTINO' ORDER BY nombre ASC";
         } else {
-            instruc = "SELECT id, nombre FROM Empresa  ORDER BY nombre ASC";
+            sql = "SELECT id, nombre FROM Empresa  ORDER BY nombre ASC";
         }
 
         try {
-            String instruccion = instruc;
+            String instruccion = sql;
             Statement stmt = conexion.createStatement();
             stmt.executeQuery(instruccion);
             ResultSet rs = stmt.getResultSet();
@@ -220,7 +220,7 @@ public class OrigenDestino extends javax.swing.JFrame {
 
     public void eliminarOrigenDestino(String nom) {
         try {
-            String instruccion = "delete from OrigenDestino where nombre ='" + nom + "'";
+            String instruccion = "DELETE FROM OrigenDestino where nombre ='" + nom + "'";
             PreparedStatement s = conexion.prepareStatement(instruccion);
             s.executeUpdate();
         } catch (Exception e) {
@@ -231,7 +231,7 @@ public class OrigenDestino extends javax.swing.JFrame {
 
     public void insertarEmpresa(String nombreEmp) {
         try {
-            String instruccion = "INSERT INTO Empresa VALUES (NULL,'" + nombreEmp + "');";
+            String instruccion = "INSERT INTO `cempresa` VALUES (NULL,'" + nombreEmp + "');";
             PreparedStatement s = conexion.prepareStatement(instruccion);
             s.executeUpdate();
         } catch (Exception e) {
@@ -241,7 +241,7 @@ public class OrigenDestino extends javax.swing.JFrame {
 
     public void modificarEmpresa(int idEmp, String nombreEmp) {
         try {
-            String instruccion = "UPDATE Empresa Set nombre ='" + nombreEmp + "' where id = '" + idEmp + "';";
+            String instruccion = "UPDATE `cempresa` SET `NOMBRE`='" + nombreEmp + "' WHERE `ID`=" + id + ";";
             PreparedStatement s = conexion.prepareStatement(instruccion);
             s.executeUpdate();
         } catch (Exception e) {
@@ -251,7 +251,7 @@ public class OrigenDestino extends javax.swing.JFrame {
 
     public void eliminarEmpresa(String nomb) {
         try {
-            String instruccion = "delete from Empresa where nombre ='" + nomb + "';";
+            String instruccion = "DELETE FROM `cempresa` WHERE `ID`=" + id + ";";
             PreparedStatement s = conexion.prepareStatement(instruccion);
             s.executeUpdate();
         } catch (Exception e) {
@@ -277,7 +277,6 @@ public class OrigenDestino extends javax.swing.JFrame {
         mnEliminar = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMaximumSize(new java.awt.Dimension(465, 300));
         setMinimumSize(new java.awt.Dimension(465, 300));
         setUndecorated(true);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -397,7 +396,7 @@ public class OrigenDestino extends javax.swing.JFrame {
     }//GEN-LAST:event_btnAccionesActionPerformed
 
     private void lblCerrarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblCerrarMouseClicked
-        Principal pri = new Principal();
+        Reporte pri = new Reporte();
         pri.setVisible(true);
         dispose();
     }//GEN-LAST:event_lblCerrarMouseClicked

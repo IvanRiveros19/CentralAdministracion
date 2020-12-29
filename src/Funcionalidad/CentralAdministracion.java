@@ -1,10 +1,10 @@
 package Funcionalidad;
 
-import Intefaces.Principal;
+import vistas.Reporte;
 
 public class CentralAdministracion {
     
     public static void main(String[] args) {
-        new Principal().setVisible(true);
+        new Reporte().setVisible(true);
     }   
 }

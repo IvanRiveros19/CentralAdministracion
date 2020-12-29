@@ -1,6 +1,6 @@
-package Intefaces;
+package vistas;
 
-import Conexiones.Conexion;
+import modelo.conexion.Conexion;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.sql.Connection;
@@ -8,9 +8,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.*;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
@@ -18,37 +22,143 @@ import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import modelo.dao.ReporteDAO;
+import modelo.dto.ReporteDTO;
 
-public class Principal extends javax.swing.JFrame {
+public class Reporte extends javax.swing.JFrame {
 
-    
-    Connection conexion = Conexion.getConnection();
-    private int filaect = -1;
-    String instruc;
-    private int numeroPasajero = 1;
-    
+    private Connection conexion = Conexion.getConnection();
+    String sql;
+    private int idActual;
+
+    private ReporteDTO reporteDTO;
+    private ReporteDAO reporteDAO = new ReporteDAO();
+
     Date hoy = new Date();
     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/YYYY");
-    String fechaActual;
-    
-    String fechaCons;
-    int noCons;
 
     static public String OpcionTitulo;
     FondoPanel fondo = new FondoPanel();
- 
-    
-    public Principal() {       
-       
-        this.setContentPane(fondo);  
-        initComponents();  
-        
-        consultaDestino();
-        consultaOrigen();
-        consultaEmpresa();
-        Consulta();
-        
-        
+
+    public Reporte() {
+        this.setContentPane(fondo);
+        initComponents();
+
+        tblAdministracion.getColumnModel().getColumn(0).setMaxWidth(0);
+        tblAdministracion.getColumnModel().getColumn(0).setMinWidth(0);
+        tblAdministracion.getTableHeader().getColumnModel().getColumn(0).setMaxWidth(0);
+        tblAdministracion.getTableHeader().getColumnModel().getColumn(0).setMinWidth(0);
+
+        llenarComboDestinos();
+        llenarComboOrigenes();
+        llenarComboEmpresas();
+        llenarTabla();
+    }
+
+    public void llenarTabla() {
+        DefaultTableModel model = (DefaultTableModel) tblAdministracion.getModel();
+        model.setRowCount(0);
+        try {
+            ResultSet rs = reporteDAO.llenarTabla();
+            while (rs.next()) {
+                Vector v = new Vector();
+                v.add(rs.getString("ID"));
+                v.add(rs.getString("NUMERO"));
+                v.add(rs.getString("HORA_SALIDA"));
+                v.add(rs.getString("ORIGEN"));
+                v.add(rs.getString("DESTINO"));
+                v.add(rs.getString("EMPRESA"));
+                v.add(rs.getString("TIPO_SERVICIO"));
+                v.add(rs.getString("TIPO_CORRIDA"));
+                v.add(rs.getString("NUMERO_ECONOMICO"));
+                v.add(rs.getString("NUMERO_PASAJEROS"));
+                v.add(rs.getString("NUMERO_SALIDA"));
+                v.add(rs.getString("FECHA"));
+                model.addRow(v);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+        tblAdministracion.setModel(model);
+    }
+
+    public void llenarComboOrigenes() {
+        DefaultComboBoxModel model = new DefaultComboBoxModel();
+        try {
+            ResultSet rs = reporteDAO.llenarComboOrigenes();
+            while (rs.next()) {
+                model.addElement(rs.getString(1));
+            }
+            rs.close();
+        } catch (Exception e) {
+            System.out.print(e);
+        }
+        cmbOrigen.setModel(model);
+    }
+
+    public void llenarComboDestinos() {
+        DefaultComboBoxModel model = new DefaultComboBoxModel();
+        try {
+            ResultSet rs = reporteDAO.llenarComboDestinos();
+            while (rs.next()) {
+                model.addElement(rs.getString(1));
+            }
+            rs.close();
+        } catch (Exception e) {
+            System.out.print(e);
+        }
+        cmbDestino.setModel(model);
+    }
+
+    public void llenarComboEmpresas() {
+        DefaultComboBoxModel model = new DefaultComboBoxModel();
+        try {
+            ResultSet rs = reporteDAO.llenarComboEmpresas();
+            while (rs.next()) {
+                model.addElement(rs.getString(1));
+            }
+            rs.close();
+        } catch (Exception e) {
+            System.out.print(e);
+        }
+        cmbEmpresa.setModel(model);
+    }
+
+    public void actualizarDatos() {
+
+    }
+
+    public void Limpiar() {
+        calAdministracion.setDate(null);
+        calAdministracion.setToolTipText(null);
+        txtHora.setText(null);
+        txtMinutos.setText(null);
+        txtNoeconomico.setText(null);
+        txtNopasajeros.setText(null);
+        txtNosalida.setText(null);
+    }
+
+    public void validarCampos() {
+        String mensaje = "";
+        Matcher matcher = null;
+        Pattern digitosPattern = Pattern.compile("^[0-9]+$");
+
+        String numEconomico = txtNoeconomico.getText();
+        matcher = digitosPattern.matcher(numEconomico);
+        if (!matcher.matches()) {
+            JOptionPane.showMessageDialog(this, "Solo se pueden introducir números");
+        }
+        String numPasajeros = txtNopasajeros.getText();
+        matcher = digitosPattern.matcher(numPasajeros);
+        if (!matcher.matches()) {
+            JOptionPane.showMessageDialog(this, "Solo se pueden introducir números");
+        }
+        String numSalida = txtNosalida.getText();
+        matcher = digitosPattern.matcher(numSalida);
+        if (!matcher.matches()) {
+            JOptionPane.showMessageDialog(this, "Solo se pueden introducir números");
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -90,8 +200,6 @@ public class Principal extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setExtendedState(6);
-        setMaximumSize(new java.awt.Dimension(920, 500));
-        setPreferredSize(new java.awt.Dimension(920, 500));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         tblAdministracion.setModel(new javax.swing.table.DefaultTableModel(
@@ -99,14 +207,40 @@ public class Principal extends javax.swing.JFrame {
 
             },
             new String [] {
-                "No.", "Hora Salida", "Origen", "Destino", "Empresa", "Tipo Servicio", "Tipo Corrida", "No. Eco. Autobus", "No. Pasajeros", "No. Salida"
+                "ID", "No.", "Hora Salida", "Origen", "Destino", "Empresa", "Tipo Servicio", "Tipo Corrida", "No. Eco. Autobus", "No. Pasajeros", "No. Salida", "Fecha"
             }
-        ));
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Object.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false, false, false, false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        tblAdministracion.setAlignmentX(0.0F);
+        tblAdministracion.setAlignmentY(0.0F);
+        tblAdministracion.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         tblAdministracion.getTableHeader().setReorderingAllowed(false);
+        tblAdministracion.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblAdministracionMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(tblAdministracion);
         if (tblAdministracion.getColumnModel().getColumnCount() > 0) {
             tblAdministracion.getColumnModel().getColumn(0).setResizable(false);
+            tblAdministracion.getColumnModel().getColumn(0).setPreferredWidth(0);
             tblAdministracion.getColumnModel().getColumn(1).setResizable(false);
+            tblAdministracion.getColumnModel().getColumn(2).setResizable(false);
+            tblAdministracion.getColumnModel().getColumn(3).setResizable(false);
         }
 
         getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 130, 1000, 450));
@@ -250,11 +384,21 @@ public class Principal extends javax.swing.JFrame {
         btnModificar.setBackground(new java.awt.Color(255, 255, 102));
         btnModificar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         btnModificar.setText("Modificar");
+        btnModificar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnModificarActionPerformed(evt);
+            }
+        });
         getContentPane().add(btnModificar, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 610, -1, -1));
 
         btnEliminar.setBackground(new java.awt.Color(255, 102, 102));
         btnEliminar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         btnEliminar.setText("Eliminar");
+        btnEliminar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEliminarActionPerformed(evt);
+            }
+        });
         getContentPane().add(btnEliminar, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 610, -1, -1));
 
         btnAdd.setBackground(new java.awt.Color(102, 255, 102));
@@ -320,21 +464,65 @@ public class Principal extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_cmbTiposervicioActionPerformed
 
+    private void tblAdministracionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblAdministracionMouseClicked
+        int index = tblAdministracion.getSelectedRow();
+        idActual = Integer.parseInt(tblAdministracion.getValueAt(index, 0).toString());
+        txtHora.setText(String.valueOf(tblAdministracion.getValueAt(index, 2)).substring(0, 2));
+        txtMinutos.setText(String.valueOf(tblAdministracion.getValueAt(index, 2)).substring(3, 5));
+        cmbOrigen.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 3)));
+        cmbDestino.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 4)));
+        cmbEmpresa.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 5)));
+        cmbTiposervicio.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 6)));
+        cmbTipocorrida.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 7)));
+        txtNoeconomico.setText(String.valueOf(tblAdministracion.getValueAt(index, 8)));
+        txtNopasajeros.setText(String.valueOf(tblAdministracion.getValueAt(index, 9)));
+        txtNosalida.setText(String.valueOf(tblAdministracion.getValueAt(index, 10)));
+    }//GEN-LAST:event_tblAdministracionMouseClicked
+
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
-         
-        String formato =calAdministracion.getDateFormatString();
+        validarCampos();
         Date date = calAdministracion.getDate();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        fechaActual = String.valueOf(sdf.format(date));
-        ConnsultaNoFech(fechaActual);
-        
-        Limpiar();
-        Consulta();
-       
+        String fechaSeleccionada = String.valueOf(sdf.format(date));
+
+        reporteDTO = new ReporteDTO();
+        reporteDTO.setFecha(fechaSeleccionada);
+        reporteDTO.setHoraSalida(txtHora.getText() + ":" + txtMinutos.getText());
+        reporteDTO.setOrigen(cmbOrigen.getSelectedItem().toString());
+        reporteDTO.setDestino(cmbDestino.getSelectedItem().toString());
+        reporteDTO.setEmpresa(cmbEmpresa.getSelectedItem().toString());
+        reporteDTO.setTipoServicio(cmbTiposervicio.getSelectedItem().toString());
+        reporteDTO.setTipoCorrida(cmbTipocorrida.getSelectedItem().toString());
+        reporteDTO.setNumeroEconomico(Integer.parseInt(txtNoeconomico.getText()));
+        reporteDTO.setNumeroPasajeros(Integer.parseInt(txtNopasajeros.getText()));
+        reporteDTO.setNumeroSalida(Integer.parseInt(txtNosalida.getText()));
+
+        reporteDAO.insertar(reporteDTO);
+        llenarTabla();
     }//GEN-LAST:event_btnAddActionPerformed
 
-    
-    
+    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
+        reporteDTO = new ReporteDTO();
+        reporteDTO.setId(idActual);
+        reporteDTO.setHoraSalida(txtHora.getText() + ":" + txtMinutos.getText());
+        reporteDTO.setOrigen(cmbOrigen.getSelectedItem().toString());
+        reporteDTO.setDestino(cmbDestino.getSelectedItem().toString());
+        reporteDTO.setEmpresa(cmbEmpresa.getSelectedItem().toString());
+        reporteDTO.setTipoServicio(cmbTiposervicio.getSelectedItem().toString());
+        reporteDTO.setTipoCorrida(cmbTipocorrida.getSelectedItem().toString());
+        reporteDTO.setNumeroEconomico(Integer.parseInt(String.valueOf(txtNoeconomico.getText())));
+        reporteDTO.setNumeroPasajeros(Integer.parseInt(String.valueOf(txtNopasajeros.getText())));
+        reporteDTO.setNumeroSalida(Integer.parseInt(String.valueOf(txtNosalida.getText())));
+
+        reporteDAO.actualizar(reporteDTO);
+        llenarTabla();
+    }//GEN-LAST:event_btnModificarActionPerformed
+
+    private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
+        reporteDAO.eliminar(idActual);
+        llenarTabla();
+    }//GEN-LAST:event_btnEliminarActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -352,34 +540,35 @@ public class Principal extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Reporte.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Reporte.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Reporte.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Reporte.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Principal().setVisible(true);
+                new Reporte().setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnAdd;
-    private javax.swing.JButton btnEliminar;
-    private javax.swing.JButton btnModificar;
-    private com.toedter.calendar.JDateChooser calAdministracion;
-    private javax.swing.JComboBox<String> cmbDestino;
-    private javax.swing.JComboBox<String> cmbEmpresa;
-    private javax.swing.JComboBox<String> cmbOrigen;
-    private javax.swing.JComboBox<String> cmbTipocorrida;
-    private javax.swing.JComboBox<String> cmbTiposervicio;
+    public javax.swing.JButton btnAdd;
+    public javax.swing.JButton btnEliminar;
+    public javax.swing.JButton btnModificar;
+    public com.toedter.calendar.JDateChooser calAdministracion;
+    public javax.swing.JComboBox<String> cmbDestino;
+    public javax.swing.JComboBox<String> cmbEmpresa;
+    public javax.swing.JComboBox<String> cmbOrigen;
+    public javax.swing.JComboBox<String> cmbTipocorrida;
+    public javax.swing.JComboBox<String> cmbTiposervicio;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblAddempresa;
     private javax.swing.JLabel lblAddestino;
@@ -397,170 +586,26 @@ public class Principal extends javax.swing.JFrame {
     private javax.swing.JLabel lblOrigen;
     private javax.swing.JLabel lblTipocorrida;
     private javax.swing.JLabel lblTiposervicio;
-    private javax.swing.JTable tblAdministracion;
-    private javax.swing.JTextField txtHora;
-    private javax.swing.JTextField txtMinutos;
-    private javax.swing.JTextField txtNoeconomico;
-    private javax.swing.JTextField txtNopasajeros;
-    private javax.swing.JTextField txtNosalida;
+    public javax.swing.JTable tblAdministracion;
+    public javax.swing.JTextField txtHora;
+    public javax.swing.JTextField txtMinutos;
+    public javax.swing.JTextField txtNoeconomico;
+    public javax.swing.JTextField txtNopasajeros;
+    public javax.swing.JTextField txtNosalida;
     // End of variables declaration//GEN-END:variables
 
-    class FondoPanel extends JPanel
-    {
+    class FondoPanel extends JPanel {
+
         private Image ima;
-        
+
         @Override
-        public void paint(Graphics g){
+        public void paint(Graphics g) {
             ima = new ImageIcon(getClass().getResource("/Imagen/FONDO PRINCIPAL.jpg")).getImage();
-            
+
             g.drawImage(ima, 0, 0, getWidth(), getHeight(), this);
             setOpaque(false);
             super.paint(g);
             setResizable(false);
         }
-        
-        
     }
-    
-    public void Insertar(int no, String hora, String minutos, String origen, String destino, String empresa, String tservicio, String tcorrida, int noeconomico, int nopasajeros, int noautobus, String fecha){
-        String horasalida = hora + ":" + minutos;
-        try {
-            String instruccion = "INSERT INTO `reporte` VALUES (NULL,'"+no+"','"+horasalida+"','"+origen+"','"+destino+"','"+empresa+"','"+tservicio+"','"+tcorrida+"','"+noeconomico+"','"+nopasajeros+"','"+noautobus+"', '"+fecha+"');";
-            PreparedStatement s = conexion.prepareStatement(instruccion);
-            s.executeUpdate();
-            JOptionPane.showMessageDialog(null, "Información agregada");
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, "No se logró agregar la información");
-                System.out.println(e);
-            }
-        
-        }
-    
-    public void consultaOrigen(){
-        DefaultComboBoxModel model = new DefaultComboBoxModel();
-        try {
-            String instruccion = "SELECT `NOMBRE` FROM `OrigenDestino` WHERE `TIPO`='ORIGEN' ORDER BY nombre ASC";
-            Statement stmt = conexion.createStatement();
-            stmt.executeQuery(instruccion);
-            ResultSet rs = stmt.getResultSet();
-            while (rs.next()) {
-                model.addElement(rs.getString(1));
-            }
-            rs.close();
-        } catch (Exception e) {
-            System.out.print(e);
-        }
-        cmbOrigen.setModel(model);
-    }
-    
-    public void consultaDestino(){
-     DefaultComboBoxModel model = new DefaultComboBoxModel();
-        try {
-            String instruccion = "SELECT `NOMBRE` FROM `OrigenDestino` WHERE `TIPO`='DESTINO' ORDER BY `NOMBRE` ASC";
-            Statement stmt = conexion.createStatement();
-            stmt.executeQuery(instruccion);
-            ResultSet rs = stmt.getResultSet();
-            while (rs.next()) {
-                model.addElement(rs.getString(1));
-            }
-            rs.close();
-        } catch (Exception e) {
-            System.out.print(e);
-        }
-        cmbDestino.setModel(model);   
-    }
-    
-    public void consultaEmpresa(){
-        DefaultComboBoxModel model = new DefaultComboBoxModel();
-        try {
-            String instruccion = "SELECT `NOMBRE` FROM `empresa` ORDER BY `NOMBRE` ASC";
-            Statement stmt = conexion.createStatement();
-            stmt.executeQuery(instruccion);
-            ResultSet rs = stmt.getResultSet();
-            while (rs.next()) {
-                model.addElement(rs.getString(1));
-            }
-            rs.close();
-        } catch (Exception e) {
-            System.out.print(e);
-        }
-        cmbEmpresa.setModel(model);  
-    }
-    
-    public void Consulta(){
-        
-        DefaultTableModel model = (DefaultTableModel) tblAdministracion.getModel();
-        model.setRowCount(0);
-       
-        try {
-            String instruccion = "SELECT * FROM `reporte` ORDER BY `FECHA`, `NUMERO` ASC";
-            Statement stmt = conexion.createStatement();
-            stmt.executeQuery(instruccion);
-            ResultSet rs = stmt.getResultSet();
-
-            while (rs.next()) {
-                Vector v = new Vector();
-                v.add(rs.getString(1));
-                v.add(rs.getString(2));
-                v.add(rs.getString(3));
-                v.add(rs.getString(4));
-                v.add(rs.getString(5));
-                v.add(rs.getString(6));
-                v.add(rs.getString(7));
-                v.add(rs.getString(8));
-                v.add(rs.getString(9));
-                v.add(rs.getString(10));
-                
-                model.addRow(v);
-               
-                tblAdministracion.setModel(model);
-                noCons = Integer.valueOf(rs.getString("NUMERO"));
-                fechaCons = String.valueOf(rs.getString("FECHA"));
-                
-            }
-            rs.close();
-        } catch (SQLException e) {
-            System.out.println(e);
-        }
-        
-        
-    }
-    
-    public void ConnsultaNoFech(String date){
-        try {
-            String instruccion = "SELECT max(NUMERO) FROM `reporte` WHERE `FECHA`='" + date + "';";
-            Statement stmt = conexion.createStatement();
-            stmt.executeQuery(instruccion);
-            ResultSet rs = stmt.getResultSet();
-            int maximo = 1;
-
-            while (rs.next()) {
-                maximo = rs.getByte(1);
-            }
-                
-            rs.close();
-            maximo++;
-            Insertar(maximo, txtHora.getText(), txtMinutos.getText(), String.valueOf(cmbOrigen.getSelectedItem()), String.valueOf(cmbDestino.getSelectedItem()), String.valueOf(cmbEmpresa.getSelectedItem()), String.valueOf(cmbTiposervicio.getSelectedItem()), String.valueOf(cmbTipocorrida.getSelectedItem()), Integer.valueOf(txtNoeconomico.getText()), Integer.valueOf(txtNopasajeros.getText()), Integer.valueOf(txtNosalida.getText()), date);
-           
-            
-        } catch (SQLException e) {
-            System.out.println(e);
-        }
-    }
-  
-    public void actualizarDatos(){
-        
-    }
-    
-    public void Limpiar(){
-        
-        calAdministracion.setDate(null);
-        calAdministracion.setToolTipText(null);
-        txtHora.setText(null);
-        txtMinutos.setText(null);
-        txtNoeconomico.setText(null);
-        txtNopasajeros.setText(null);
-        txtNosalida.setText(null);
-    }
-
 }
