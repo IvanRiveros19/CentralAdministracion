@@ -73,7 +73,7 @@ public class Reporte extends javax.swing.JFrame {
                 v.add(rs.getString("NUMERO_ECONOMICO"));
                 v.add(rs.getString("NUMERO_PASAJEROS"));
                 v.add(rs.getString("NUMERO_SALIDA"));
-                v.add(rs.getString("FECHA"));
+                v.add(rs.getString("FECHA_SALIDA"));
                 model.addRow(v);
             }
             rs.close();
@@ -145,34 +145,34 @@ public class Reporte extends javax.swing.JFrame {
         Matcher matcher = null;
         Pattern digitosPattern = Pattern.compile("^[0-9]+$");
 
-        String hora = txtNoeconomico.getText();
+        String hora = txtHora.getValue().toString().trim();
         matcher = digitosPattern.matcher(hora);
         if (!matcher.matches()) {
             JOptionPane.showMessageDialog(this, "Formato del campo 'Horas' incorrecto");
             return false;
         }
-        String minutos = txtNoeconomico.getText();
+        String minutos = txtMinutos.getValue().toString().trim();
         matcher = digitosPattern.matcher(minutos);
         if (!matcher.matches()) {
             JOptionPane.showMessageDialog(this, "Formato del campo 'Minutos' incorrecto");
             return false;
         }
-        String numEconomico = txtNoeconomico.getText();
+        String numEconomico = txtNoeconomico.getText().trim();
         matcher = digitosPattern.matcher(numEconomico);
         if (!matcher.matches()) {
-            JOptionPane.showMessageDialog(this, "Formato del campo 'Minutos' incorrecto");
+            JOptionPane.showMessageDialog(this, "Formato del campo 'No. Económico' incorrecto");
             return false;
         }
-        String numPasajeros = txtNopasajeros.getText();
+        String numPasajeros = txtNopasajeros.getText().trim();
         matcher = digitosPattern.matcher(numPasajeros);
         if (!matcher.matches()) {
-            JOptionPane.showMessageDialog(this, "Formato del campo 'Minutos' incorrecto");
+            JOptionPane.showMessageDialog(this, "Formato del campo 'No. Pasajeros' incorrecto");
             return false;
         }
-        String numSalida = txtNosalida.getText();
+        String numSalida = txtNosalida.getText().trim();
         matcher = digitosPattern.matcher(numSalida);
         if (!matcher.matches()) {
-            JOptionPane.showMessageDialog(this, "Formato del campo 'Minutos' incorrecto");
+            JOptionPane.showMessageDialog(this, "Formato del campo 'No. Salida' incorrecto");
             return false;
         }
         return true;
@@ -275,11 +275,6 @@ public class Reporte extends javax.swing.JFrame {
         lblAdministracion.setForeground(new java.awt.Color(255, 0, 0));
         lblAdministracion.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblAdministracion.setText("CENTRAL DE AUTOBUSES TULANCINGO S.A. DE C.V");
-        lblAdministracion.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                lblAdministracionMouseClicked(evt);
-            }
-        });
         getContentPane().add(lblAdministracion, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 10, 1370, 90));
 
         lblNosalida.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
@@ -340,11 +335,6 @@ public class Reporte extends javax.swing.JFrame {
 
         cmbTiposervicio.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         cmbTiposervicio.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "PRIMERA", "SEGUNDA" }));
-        cmbTiposervicio.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cmbTiposervicioActionPerformed(evt);
-            }
-        });
         getContentPane().add(cmbTiposervicio, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 330, 150, -1));
 
         cmbEmpresa.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
@@ -461,10 +451,6 @@ public class Reporte extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void lblAdministracionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblAdministracionMouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_lblAdministracionMouseClicked
-
     private void lblArchivosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblArchivosMouseClicked
         // TODO add your handling code here:
     }//GEN-LAST:event_lblArchivosMouseClicked
@@ -490,18 +476,14 @@ public class Reporte extends javax.swing.JFrame {
         dispose();
     }//GEN-LAST:event_lblAddempresaMouseClicked
 
-    private void cmbTiposervicioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbTiposervicioActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cmbTiposervicioActionPerformed
-
     private void tblAdministracionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblAdministracionMouseClicked
         try {
             int index = tblAdministracion.getSelectedRow();
             btnAdd.setEnabled(false);
             btnModificar.setEnabled(true);
             btnEliminar.setEnabled(true);
-            Date feecha = calendarDateFormat.parse(tblAdministracion.getValueAt(index, 11).toString());
-            calAdministracion.setDate(feecha);
+            Date fecha = calendarDateFormat.parse(tblAdministracion.getValueAt(index, 11).toString());
+            calAdministracion.setDate(fecha);
             idActual = Integer.parseInt(tblAdministracion.getValueAt(index, 0).toString());
             txtHora.setValue(String.valueOf(tblAdministracion.getValueAt(index, 2)).substring(0, 2));
             txtMinutos.setValue(String.valueOf(tblAdministracion.getValueAt(index, 2)).substring(3, 5));
@@ -523,25 +505,26 @@ public class Reporte extends javax.swing.JFrame {
     }//GEN-LAST:event_txtHoraStateChanged
 
     private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
-        validarCampos();
-        reporteDTO = new ReporteDTO();
-        reporteDTO.setId(idActual);
-        reporteDTO.setHoraSalida(txtHora.getValue() + ":" + txtMinutos.getValue());
-        reporteDTO.setOrigen(cmbOrigen.getSelectedItem().toString());
-        reporteDTO.setDestino(cmbDestino.getSelectedItem().toString());
-        reporteDTO.setEmpresa(cmbEmpresa.getSelectedItem().toString());
-        reporteDTO.setTipoServicio(cmbTiposervicio.getSelectedItem().toString());
-        reporteDTO.setTipoCorrida(cmbTipocorrida.getSelectedItem().toString());
-        reporteDTO.setNumeroEconomico(Integer.parseInt(String.valueOf(txtNoeconomico.getText())));
-        reporteDTO.setNumeroPasajeros(Integer.parseInt(String.valueOf(txtNopasajeros.getText())));
-        reporteDTO.setNumeroSalida(Integer.parseInt(String.valueOf(txtNosalida.getText())));
+        if (validarCampos()) {
+            reporteDTO = new ReporteDTO();
+            reporteDTO.setId(idActual);
+            reporteDTO.setHoraSalida(txtHora.getValue() + ":" + txtMinutos.getValue());
+            reporteDTO.setOrigen(cmbOrigen.getSelectedItem().toString());
+            reporteDTO.setDestino(cmbDestino.getSelectedItem().toString());
+            reporteDTO.setEmpresa(cmbEmpresa.getSelectedItem().toString());
+            reporteDTO.setTipoServicio(cmbTiposervicio.getSelectedItem().toString());
+            reporteDTO.setTipoCorrida(cmbTipocorrida.getSelectedItem().toString());
+            reporteDTO.setNumeroEconomico(Integer.parseInt(String.valueOf(txtNoeconomico.getText().trim())));
+            reporteDTO.setNumeroPasajeros(Integer.parseInt(String.valueOf(txtNopasajeros.getText().trim())));
+            reporteDTO.setNumeroSalida(Integer.parseInt(String.valueOf(txtNosalida.getText().trim())));
 
-        reporteDAO.actualizar(reporteDTO);
-        limpiar();
-        btnAdd.setEnabled(true);
-        btnModificar.setEnabled(false);
-        btnEliminar.setEnabled(false);
-        llenarTabla();
+            reporteDAO.actualizar(reporteDTO);
+            limpiar();
+            btnAdd.setEnabled(true);
+            btnModificar.setEnabled(false);
+            btnEliminar.setEnabled(false);
+            llenarTabla();
+        }
     }//GEN-LAST:event_btnModificarActionPerformed
 
     private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
@@ -554,25 +537,25 @@ public class Reporte extends javax.swing.JFrame {
     }//GEN-LAST:event_btnEliminarActionPerformed
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
-        validarCampos();
-        Date date = calAdministracion.getDate();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String fechaSeleccionada = String.valueOf(sdf.format(date));
+        if (validarCampos()) {
+            Date date = calAdministracion.getDate();
+            String fechaSeleccionada = String.valueOf(dbDateFormat.format(date));
 
-        reporteDTO = new ReporteDTO();
-        reporteDTO.setFecha(fechaSeleccionada);
-        reporteDTO.setHoraSalida(txtHora.getValue()+ ":" + txtMinutos.getValue());
-        reporteDTO.setOrigen(cmbOrigen.getSelectedItem().toString());
-        reporteDTO.setDestino(cmbDestino.getSelectedItem().toString());
-        reporteDTO.setEmpresa(cmbEmpresa.getSelectedItem().toString());
-        reporteDTO.setTipoServicio(cmbTiposervicio.getSelectedItem().toString());
-        reporteDTO.setTipoCorrida(cmbTipocorrida.getSelectedItem().toString());
-        reporteDTO.setNumeroEconomico(Integer.parseInt(txtNoeconomico.getText()));
-        reporteDTO.setNumeroPasajeros(Integer.parseInt(txtNopasajeros.getText()));
-        reporteDTO.setNumeroSalida(Integer.parseInt(txtNosalida.getText()));
+            reporteDTO = new ReporteDTO();
+            reporteDTO.setFecha(fechaSeleccionada);
+            reporteDTO.setHoraSalida(txtHora.getValue() + ":" + txtMinutos.getValue());
+            reporteDTO.setOrigen(cmbOrigen.getSelectedItem().toString());
+            reporteDTO.setDestino(cmbDestino.getSelectedItem().toString());
+            reporteDTO.setEmpresa(cmbEmpresa.getSelectedItem().toString());
+            reporteDTO.setTipoServicio(cmbTiposervicio.getSelectedItem().toString());
+            reporteDTO.setTipoCorrida(cmbTipocorrida.getSelectedItem().toString());
+            reporteDTO.setNumeroEconomico(Integer.parseInt(txtNoeconomico.getText().trim()));
+            reporteDTO.setNumeroPasajeros(Integer.parseInt(txtNopasajeros.getText().trim()));
+            reporteDTO.setNumeroSalida(Integer.parseInt(txtNosalida.getText().trim()));
 
-        reporteDAO.insertar(reporteDTO);
-        llenarTabla();
+            reporteDAO.insertar(reporteDTO);
+            llenarTabla();
+        }
     }//GEN-LAST:event_btnAddActionPerformed
 
     private void btnLimpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarActionPerformed
