@@ -11,9 +11,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import modelo.conexion.Conexion;
 import modelo.dto.ReporteDTO;
@@ -28,12 +25,13 @@ public class ReporteDAO {
         try {
             sql = "SELECT `treporte`.`ID`, `NUMERO`, `HORA_SALIDA`, `corigen`.`NOMBRE` AS 'ORIGEN', "
                     + "`cdestino`.`NOMBRE` AS 'DESTINO', `cempresa`.`NOMBRE` AS 'EMPRESA', `TIPO_SERVICIO`, "
-                    + "`TIPO_CORRIDA`, `NUMERO_ECONOMICO`, `NUMERO_PASAJEROS`, `NUMERO_SALIDA`, date_format(`FECHA`, '%d/%c/%Y') AS 'FECHA' "
+                    + "`TIPO_CORRIDA`, `NUMERO_ECONOMICO`, `NUMERO_PASAJEROS`, `NUMERO_SALIDA`, date_format(`FECHA`, '%d/%m/%Y') AS 'FECHA_SALIDA' "
                     + "FROM `treporte` "
                     + "INNER JOIN `corigen` ON `treporte`.`CORIGEN_ID`=`corigen`.`ID` "
                     + "INNER JOIN `cdestino` ON `treporte`.`CDESTINO_ID`=`cdestino`.`ID` "
                     + "INNER JOIN `cempresa` ON `treporte`.`CEMPRESA_ID`=`cempresa`.`ID` "
-                    + "ORDER BY `FECHA` ASC;";
+                    + "ORDER BY `FECHA` DESC, `NUMERO` DESC;";
+            System.out.println(sql);
             Statement stmt = conexion.createStatement();
             stmt.executeQuery(sql);
             rs = stmt.getResultSet();
@@ -86,14 +84,12 @@ public class ReporteDAO {
                     + "(SELECT `ID` FROM `cdestino` WHERE `NOMBRE`='" + reporte.getDestino() + "'),"
                     + "(SELECT `ID` FROM `cempresa` WHERE `NOMBRE`='" + reporte.getEmpresa() + "'),"
                     + "'" + reporte.getTipoServicio() + "','" + reporte.getTipoCorrida() + "','" + reporte.getNumeroEconomico() + "','"
-                    + reporte.getNumeroPasajeros() + "','" + reporte.getNumeroSalida() + "', '" + reporte.getFecha() + "');";
-            System.out.println(sql);
+                    + reporte.getNumeroPasajeros() + "','" + reporte.getNumeroSalida() + "', '" + reporte.getFecha() + "', now());";
             PreparedStatement s = conexion.prepareStatement(sql);
             s.executeUpdate();
             JOptionPane.showMessageDialog(null, "Información agregada con éxito");
         } catch (HeadlessException | SQLException e) {
-            JOptionPane.showMessageDialog(null, "No se logró agregar la información");
-            System.out.println(e);
+            JOptionPane.showMessageDialog(null, "Ocurrió un error al registrar su información");
         }
     }
     
@@ -125,12 +121,11 @@ public class ReporteDAO {
                 + "`NUMERO_ECONOMICO`=" + reporte.getNumeroEconomico()+ ",`NUMERO_PASAJEROS`=" + reporte.getNumeroPasajeros()+ ", "
                 + "`NUMERO_SALIDA`=" + reporte.getNumeroSalida()+ " "
                 + "WHERE `ID`=" + reporte.getId() + ";";
-            System.out.println(sql);
             PreparedStatement s = conexion.prepareStatement(sql);
             s.executeUpdate();
-            JOptionPane.showMessageDialog(null, "Información agregada con éxito");
+            JOptionPane.showMessageDialog(null, "Información actualizada");
         } catch (HeadlessException | SQLException e) {
-            System.out.println(e);
+            JOptionPane.showMessageDialog(null, "Ocurrió un error al actualizar el registro");
         }
     }
     
@@ -140,9 +135,9 @@ public class ReporteDAO {
             System.out.println(sql);
             PreparedStatement s = conexion.prepareStatement(sql);
             s.executeUpdate();
-            JOptionPane.showMessageDialog(null, "Información agregada con éxito");
+            JOptionPane.showMessageDialog(null, "Registro eliminado");
         } catch (HeadlessException | SQLException e) {
-            System.out.println(e);
+            JOptionPane.showMessageDialog(null, "Ocurrió un error al eliminar el registro");
         }
     }
     
