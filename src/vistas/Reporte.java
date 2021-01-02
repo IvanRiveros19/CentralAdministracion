@@ -28,14 +28,14 @@ import modelo.dto.ReporteDTO;
 public class Reporte extends javax.swing.JFrame {
 
     private Connection conexion = Conexion.getConnection();
-    String sql;
     private int idActual;
 
     private ReporteDTO reporteDTO;
     private ReporteDAO reporteDAO = new ReporteDAO();
 
     Date hoy = new Date();
-    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/YYYY");
+    SimpleDateFormat calendarDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+    SimpleDateFormat dbDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     static public String OpcionTitulo;
     FondoPanel fondo = new FondoPanel();
@@ -73,7 +73,7 @@ public class Reporte extends javax.swing.JFrame {
                 v.add(rs.getString("NUMERO_ECONOMICO"));
                 v.add(rs.getString("NUMERO_PASAJEROS"));
                 v.add(rs.getString("NUMERO_SALIDA"));
-                v.add(rs.getString("FECHA"));
+                v.add(rs.getString("FECHA_SALIDA"));
                 model.addRow(v);
             }
             rs.close();
@@ -125,40 +125,57 @@ public class Reporte extends javax.swing.JFrame {
         cmbEmpresa.setModel(model);
     }
 
-    public void actualizarDatos() {
-
-    }
-
-    public void Limpiar() {
+    public void limpiar() {
         calAdministracion.setDate(null);
         calAdministracion.setToolTipText(null);
-        txtHora.setText(null);
-        txtMinutos.setText(null);
-        txtNoeconomico.setText(null);
-        txtNopasajeros.setText(null);
-        txtNosalida.setText(null);
+        txtHora.setValue("00");
+        txtMinutos.setValue("00");
+        cmbOrigen.setSelectedIndex(0);
+        cmbDestino.setSelectedIndex(0);
+        cmbEmpresa.setSelectedIndex(0);
+        cmbTiposervicio.setSelectedIndex(0);
+        cmbTipocorrida.setSelectedIndex(0);
+        txtNoeconomico.setText("");
+        txtNopasajeros.setText("");
+        txtNosalida.setText("");
     }
 
-    public void validarCampos() {
+    public boolean validarCampos() {
         String mensaje = "";
         Matcher matcher = null;
         Pattern digitosPattern = Pattern.compile("^[0-9]+$");
 
-        String numEconomico = txtNoeconomico.getText();
+        String hora = txtHora.getValue().toString().trim();
+        matcher = digitosPattern.matcher(hora);
+        if (!matcher.matches()) {
+            JOptionPane.showMessageDialog(this, "Formato del campo 'Horas' incorrecto");
+            return false;
+        }
+        String minutos = txtMinutos.getValue().toString().trim();
+        matcher = digitosPattern.matcher(minutos);
+        if (!matcher.matches()) {
+            JOptionPane.showMessageDialog(this, "Formato del campo 'Minutos' incorrecto");
+            return false;
+        }
+        String numEconomico = txtNoeconomico.getText().trim();
         matcher = digitosPattern.matcher(numEconomico);
         if (!matcher.matches()) {
-            JOptionPane.showMessageDialog(this, "Solo se pueden introducir números");
+            JOptionPane.showMessageDialog(this, "Formato del campo 'No. Económico' incorrecto");
+            return false;
         }
-        String numPasajeros = txtNopasajeros.getText();
+        String numPasajeros = txtNopasajeros.getText().trim();
         matcher = digitosPattern.matcher(numPasajeros);
         if (!matcher.matches()) {
-            JOptionPane.showMessageDialog(this, "Solo se pueden introducir números");
+            JOptionPane.showMessageDialog(this, "Formato del campo 'No. Pasajeros' incorrecto");
+            return false;
         }
-        String numSalida = txtNosalida.getText();
+        String numSalida = txtNosalida.getText().trim();
         matcher = digitosPattern.matcher(numSalida);
         if (!matcher.matches()) {
-            JOptionPane.showMessageDialog(this, "Solo se pueden introducir números");
+            JOptionPane.showMessageDialog(this, "Formato del campo 'No. Salida' incorrecto");
+            return false;
         }
+        return true;
     }
 
     @SuppressWarnings("unchecked")
@@ -171,8 +188,6 @@ public class Reporte extends javax.swing.JFrame {
         lblFecha = new javax.swing.JLabel();
         lblAdministracion = new javax.swing.JLabel();
         lblNosalida = new javax.swing.JLabel();
-        txtMinutos = new javax.swing.JTextField();
-        txtHora = new javax.swing.JTextField();
         lblAddempresa = new javax.swing.JLabel();
         lblOrigen = new javax.swing.JLabel();
         lblHorasalida = new javax.swing.JLabel();
@@ -192,11 +207,15 @@ public class Reporte extends javax.swing.JFrame {
         txtNoeconomico = new javax.swing.JTextField();
         lblAddestino = new javax.swing.JLabel();
         lblAddorigen = new javax.swing.JLabel();
+        lblArchivos = new javax.swing.JLabel();
         lblDospuntos = new javax.swing.JLabel();
+        txtHora = new javax.swing.JSpinner();
+        txtMinutos = new javax.swing.JSpinner();
         btnModificar = new javax.swing.JButton();
         btnEliminar = new javax.swing.JButton();
         btnAdd = new javax.swing.JButton();
-        lblArchivos = new javax.swing.JLabel();
+        btnLimpiar = new javax.swing.JButton();
+        btnCancelar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setExtendedState(6);
@@ -256,32 +275,11 @@ public class Reporte extends javax.swing.JFrame {
         lblAdministracion.setForeground(new java.awt.Color(255, 0, 0));
         lblAdministracion.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblAdministracion.setText("CENTRAL DE AUTOBUSES TULANCINGO S.A. DE C.V");
-        lblAdministracion.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                lblAdministracionMouseClicked(evt);
-            }
-        });
         getContentPane().add(lblAdministracion, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 10, 1370, 90));
 
         lblNosalida.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         lblNosalida.setText("No. Salida");
         getContentPane().add(lblNosalida, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 490, -1, -1));
-
-        txtMinutos.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        txtMinutos.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtMinutosActionPerformed(evt);
-            }
-        });
-        getContentPane().add(txtMinutos, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 170, 50, -1));
-
-        txtHora.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        txtHora.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtHoraActionPerformed(evt);
-            }
-        });
-        getContentPane().add(txtHora, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 170, 50, -1));
 
         lblAddempresa.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         lblAddempresa.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -337,11 +335,6 @@ public class Reporte extends javax.swing.JFrame {
 
         cmbTiposervicio.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         cmbTiposervicio.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "PRIMERA", "SEGUNDA" }));
-        cmbTiposervicio.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cmbTiposervicioActionPerformed(evt);
-            }
-        });
         getContentPane().add(cmbTiposervicio, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 330, 150, -1));
 
         cmbEmpresa.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
@@ -376,14 +369,39 @@ public class Reporte extends javax.swing.JFrame {
         });
         getContentPane().add(lblAddorigen, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 210, 30, 20));
 
+        lblArchivos.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblArchivos.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Imagen/ExcelCentral.png"))); // NOI18N
+        lblArchivos.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblArchivosMouseClicked(evt);
+            }
+        });
+        getContentPane().add(lblArchivos, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 590, 970, 110));
+
         lblDospuntos.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lblDospuntos.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblDospuntos.setText(":");
-        getContentPane().add(lblDospuntos, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 170, 50, 20));
+        getContentPane().add(lblDospuntos, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 170, 30, 20));
+
+        txtHora.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        txtHora.setModel(new javax.swing.SpinnerListModel(new String[] {"00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"}));
+        txtHora.setOpaque(false);
+        txtHora.setRequestFocusEnabled(false);
+        txtHora.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                txtHoraStateChanged(evt);
+            }
+        });
+        getContentPane().add(txtHora, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 170, 50, -1));
+
+        txtMinutos.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        txtMinutos.setModel(new javax.swing.SpinnerListModel(new String[] {"00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59"}));
+        getContentPane().add(txtMinutos, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 170, 50, -1));
 
         btnModificar.setBackground(new java.awt.Color(255, 255, 102));
         btnModificar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         btnModificar.setText("Modificar");
+        btnModificar.setEnabled(false);
         btnModificar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnModificarActionPerformed(evt);
@@ -394,6 +412,7 @@ public class Reporte extends javax.swing.JFrame {
         btnEliminar.setBackground(new java.awt.Color(255, 102, 102));
         btnEliminar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         btnEliminar.setText("Eliminar");
+        btnEliminar.setEnabled(false);
         btnEliminar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnEliminarActionPerformed(evt);
@@ -411,29 +430,26 @@ public class Reporte extends javax.swing.JFrame {
         });
         getContentPane().add(btnAdd, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 610, -1, -1));
 
-        lblArchivos.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblArchivos.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Imagen/ExcelCentral.png"))); // NOI18N
-        lblArchivos.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                lblArchivosMouseClicked(evt);
+        btnLimpiar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        btnLimpiar.setText("Limpiar");
+        btnLimpiar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLimpiarActionPerformed(evt);
             }
         });
-        getContentPane().add(lblArchivos, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 590, 970, 110));
+        getContentPane().add(btnLimpiar, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 650, -1, -1));
+
+        btnCancelar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        btnCancelar.setText("Cancelar");
+        btnCancelar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCancelarActionPerformed(evt);
+            }
+        });
+        getContentPane().add(btnCancelar, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 650, -1, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    private void txtMinutosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtMinutosActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtMinutosActionPerformed
-
-    private void txtHoraActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtHoraActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtHoraActionPerformed
-
-    private void lblAdministracionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblAdministracionMouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_lblAdministracionMouseClicked
 
     private void lblArchivosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblArchivosMouseClicked
         // TODO add your handling code here:
@@ -460,68 +476,99 @@ public class Reporte extends javax.swing.JFrame {
         dispose();
     }//GEN-LAST:event_lblAddempresaMouseClicked
 
-    private void cmbTiposervicioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbTiposervicioActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cmbTiposervicioActionPerformed
-
     private void tblAdministracionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblAdministracionMouseClicked
-        int index = tblAdministracion.getSelectedRow();
-        idActual = Integer.parseInt(tblAdministracion.getValueAt(index, 0).toString());
-        txtHora.setText(String.valueOf(tblAdministracion.getValueAt(index, 2)).substring(0, 2));
-        txtMinutos.setText(String.valueOf(tblAdministracion.getValueAt(index, 2)).substring(3, 5));
-        cmbOrigen.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 3)));
-        cmbDestino.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 4)));
-        cmbEmpresa.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 5)));
-        cmbTiposervicio.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 6)));
-        cmbTipocorrida.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 7)));
-        txtNoeconomico.setText(String.valueOf(tblAdministracion.getValueAt(index, 8)));
-        txtNopasajeros.setText(String.valueOf(tblAdministracion.getValueAt(index, 9)));
-        txtNosalida.setText(String.valueOf(tblAdministracion.getValueAt(index, 10)));
+        try {
+            int index = tblAdministracion.getSelectedRow();
+            btnAdd.setEnabled(false);
+            btnModificar.setEnabled(true);
+            btnEliminar.setEnabled(true);
+            Date fecha = calendarDateFormat.parse(tblAdministracion.getValueAt(index, 11).toString());
+            calAdministracion.setDate(fecha);
+            idActual = Integer.parseInt(tblAdministracion.getValueAt(index, 0).toString());
+            txtHora.setValue(String.valueOf(tblAdministracion.getValueAt(index, 2)).substring(0, 2));
+            txtMinutos.setValue(String.valueOf(tblAdministracion.getValueAt(index, 2)).substring(3, 5));
+            cmbOrigen.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 3)));
+            cmbDestino.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 4)));
+            cmbEmpresa.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 5)));
+            cmbTiposervicio.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 6)));
+            cmbTipocorrida.setSelectedItem(String.valueOf(tblAdministracion.getValueAt(index, 7)));
+            txtNoeconomico.setText(String.valueOf(tblAdministracion.getValueAt(index, 8)));
+            txtNopasajeros.setText(String.valueOf(tblAdministracion.getValueAt(index, 9)));
+            txtNosalida.setText(String.valueOf(tblAdministracion.getValueAt(index, 10)));
+        } catch (ParseException ex) {
+            Logger.getLogger(Reporte.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_tblAdministracionMouseClicked
 
-    private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
-        validarCampos();
-        Date date = calAdministracion.getDate();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String fechaSeleccionada = String.valueOf(sdf.format(date));
+    private void txtHoraStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_txtHoraStateChanged
 
-        reporteDTO = new ReporteDTO();
-        reporteDTO.setFecha(fechaSeleccionada);
-        reporteDTO.setHoraSalida(txtHora.getText() + ":" + txtMinutos.getText());
-        reporteDTO.setOrigen(cmbOrigen.getSelectedItem().toString());
-        reporteDTO.setDestino(cmbDestino.getSelectedItem().toString());
-        reporteDTO.setEmpresa(cmbEmpresa.getSelectedItem().toString());
-        reporteDTO.setTipoServicio(cmbTiposervicio.getSelectedItem().toString());
-        reporteDTO.setTipoCorrida(cmbTipocorrida.getSelectedItem().toString());
-        reporteDTO.setNumeroEconomico(Integer.parseInt(txtNoeconomico.getText()));
-        reporteDTO.setNumeroPasajeros(Integer.parseInt(txtNopasajeros.getText()));
-        reporteDTO.setNumeroSalida(Integer.parseInt(txtNosalida.getText()));
-
-        reporteDAO.insertar(reporteDTO);
-        llenarTabla();
-    }//GEN-LAST:event_btnAddActionPerformed
+    }//GEN-LAST:event_txtHoraStateChanged
 
     private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
-        reporteDTO = new ReporteDTO();
-        reporteDTO.setId(idActual);
-        reporteDTO.setHoraSalida(txtHora.getText() + ":" + txtMinutos.getText());
-        reporteDTO.setOrigen(cmbOrigen.getSelectedItem().toString());
-        reporteDTO.setDestino(cmbDestino.getSelectedItem().toString());
-        reporteDTO.setEmpresa(cmbEmpresa.getSelectedItem().toString());
-        reporteDTO.setTipoServicio(cmbTiposervicio.getSelectedItem().toString());
-        reporteDTO.setTipoCorrida(cmbTipocorrida.getSelectedItem().toString());
-        reporteDTO.setNumeroEconomico(Integer.parseInt(String.valueOf(txtNoeconomico.getText())));
-        reporteDTO.setNumeroPasajeros(Integer.parseInt(String.valueOf(txtNopasajeros.getText())));
-        reporteDTO.setNumeroSalida(Integer.parseInt(String.valueOf(txtNosalida.getText())));
+        if (validarCampos()) {
+            reporteDTO = new ReporteDTO();
+            reporteDTO.setId(idActual);
+            reporteDTO.setHoraSalida(txtHora.getValue() + ":" + txtMinutos.getValue());
+            reporteDTO.setOrigen(cmbOrigen.getSelectedItem().toString());
+            reporteDTO.setDestino(cmbDestino.getSelectedItem().toString());
+            reporteDTO.setEmpresa(cmbEmpresa.getSelectedItem().toString());
+            reporteDTO.setTipoServicio(cmbTiposervicio.getSelectedItem().toString());
+            reporteDTO.setTipoCorrida(cmbTipocorrida.getSelectedItem().toString());
+            reporteDTO.setNumeroEconomico(Integer.parseInt(String.valueOf(txtNoeconomico.getText().trim())));
+            reporteDTO.setNumeroPasajeros(Integer.parseInt(String.valueOf(txtNopasajeros.getText().trim())));
+            reporteDTO.setNumeroSalida(Integer.parseInt(String.valueOf(txtNosalida.getText().trim())));
 
-        reporteDAO.actualizar(reporteDTO);
-        llenarTabla();
+            reporteDAO.actualizar(reporteDTO);
+            limpiar();
+            btnAdd.setEnabled(true);
+            btnModificar.setEnabled(false);
+            btnEliminar.setEnabled(false);
+            llenarTabla();
+        }
     }//GEN-LAST:event_btnModificarActionPerformed
 
     private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
         reporteDAO.eliminar(idActual);
+        btnAdd.setEnabled(true);
+        btnModificar.setEnabled(false);
+        btnEliminar.setEnabled(false);
+        limpiar();
         llenarTabla();
     }//GEN-LAST:event_btnEliminarActionPerformed
+
+    private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
+        if (validarCampos()) {
+            Date date = calAdministracion.getDate();
+            String fechaSeleccionada = String.valueOf(dbDateFormat.format(date));
+
+            reporteDTO = new ReporteDTO();
+            reporteDTO.setFecha(fechaSeleccionada);
+            reporteDTO.setHoraSalida(txtHora.getValue() + ":" + txtMinutos.getValue());
+            reporteDTO.setOrigen(cmbOrigen.getSelectedItem().toString());
+            reporteDTO.setDestino(cmbDestino.getSelectedItem().toString());
+            reporteDTO.setEmpresa(cmbEmpresa.getSelectedItem().toString());
+            reporteDTO.setTipoServicio(cmbTiposervicio.getSelectedItem().toString());
+            reporteDTO.setTipoCorrida(cmbTipocorrida.getSelectedItem().toString());
+            reporteDTO.setNumeroEconomico(Integer.parseInt(txtNoeconomico.getText().trim()));
+            reporteDTO.setNumeroPasajeros(Integer.parseInt(txtNopasajeros.getText().trim()));
+            reporteDTO.setNumeroSalida(Integer.parseInt(txtNosalida.getText().trim()));
+
+            reporteDAO.insertar(reporteDTO);
+            llenarTabla();
+        }
+    }//GEN-LAST:event_btnAddActionPerformed
+
+    private void btnLimpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarActionPerformed
+        limpiar();
+    }//GEN-LAST:event_btnLimpiarActionPerformed
+
+    private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
+        btnAdd.setEnabled(true);
+        btnModificar.setEnabled(false);
+        btnEliminar.setEnabled(false);
+        limpiar();
+        idActual = 0;
+    }//GEN-LAST:event_btnCancelarActionPerformed
 
     /**
      * @param args the command line arguments
@@ -561,7 +608,9 @@ public class Reporte extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     public javax.swing.JButton btnAdd;
+    private javax.swing.JButton btnCancelar;
     public javax.swing.JButton btnEliminar;
+    private javax.swing.JButton btnLimpiar;
     public javax.swing.JButton btnModificar;
     public com.toedter.calendar.JDateChooser calAdministracion;
     public javax.swing.JComboBox<String> cmbDestino;
@@ -587,8 +636,8 @@ public class Reporte extends javax.swing.JFrame {
     private javax.swing.JLabel lblTipocorrida;
     private javax.swing.JLabel lblTiposervicio;
     public javax.swing.JTable tblAdministracion;
-    public javax.swing.JTextField txtHora;
-    public javax.swing.JTextField txtMinutos;
+    private javax.swing.JSpinner txtHora;
+    private javax.swing.JSpinner txtMinutos;
     public javax.swing.JTextField txtNoeconomico;
     public javax.swing.JTextField txtNopasajeros;
     public javax.swing.JTextField txtNosalida;
