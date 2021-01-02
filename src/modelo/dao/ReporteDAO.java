@@ -30,7 +30,7 @@ public class ReporteDAO {
                     + "INNER JOIN `corigen` ON `treporte`.`CORIGEN_ID`=`corigen`.`ID` "
                     + "INNER JOIN `cdestino` ON `treporte`.`CDESTINO_ID`=`cdestino`.`ID` "
                     + "INNER JOIN `cempresa` ON `treporte`.`CEMPRESA_ID`=`cempresa`.`ID` "
-                    + "ORDER BY `FECHA` DESC, `NUMERO` DESC;";
+                    + "ORDER BY `FECHA` ASC, `NUMERO` ASC;";
             System.out.println(sql);
             Statement stmt = conexion.createStatement();
             stmt.executeQuery(sql);
