@@ -10,33 +10,42 @@ import java.sql.Statement;
 import java.util.Vector;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import modelo.dao.DestinoDAO;
+import modelo.dao.EmpresaDAO;
+import modelo.dao.OrigenDAO;
 
 public class OrigenDestino extends javax.swing.JFrame {
-    private int id = 0;
+
     Reporte principal = new Reporte();
-    Connection conexion = Conexion.getConnection();
-    private int filaSelect = -1;
-    String sql, oldPass;
-    int number;
+    DestinoDAO destinoDAO;
+    EmpresaDAO empresaDAO;
+    OrigenDAO origenDAO;
+    private int idActual;
 
     public OrigenDestino() {
-
         initComponents();
         setResizable(false);
         setLocationRelativeTo(null);
 
+        tblNombres.getColumnModel().getColumn(0).setMaxWidth(0);
+        tblNombres.getColumnModel().getColumn(0).setMinWidth(0);
+        tblNombres.getTableHeader().getColumnModel().getColumn(0).setMaxWidth(0);
+        tblNombres.getTableHeader().getColumnModel().getColumn(0).setMinWidth(0);
+
         comparaTitulo();
         ocultarComponentes();
-
     }
 
     public void comparaTitulo() {
         if (Reporte.OpcionTitulo.equals("1")) {
             lblTitulo.setText("ORIGEN");
+            origenDAO = new OrigenDAO();
         } else if (Reporte.OpcionTitulo.equals("2")) {
             lblTitulo.setText("DESTINO");
+            destinoDAO = new DestinoDAO();
         } else if (Reporte.OpcionTitulo.equals("3")) {
             lblTitulo.setText("EMPRESA");
+            empresaDAO = new EmpresaDAO();
         } else {
             lblTitulo.setText("No hay titulo");
         }
@@ -58,204 +67,57 @@ public class OrigenDestino extends javax.swing.JFrame {
         pnlNombres.setVisible(true);
     }
 
-    public void compararOpciones() {
-
+    public void comprobarOperacion() {
         if (btnAcciones.getText().equals("Añadir") && lblTitulo.getText().equals("ORIGEN")) {
-            insertarOrigenDestino(txtNombre.getText(), "ORIGEN");
-            JOptionPane.showMessageDialog(null, "Origen añadido exitosamente");
-            Consulta();
-            txtNombre.setText(null);
-
+            origenDAO.insertar(txtNombre.getText());
         } else if (btnAcciones.getText().equals("Añadir") && lblTitulo.getText().equals("DESTINO")) {
-            insertarOrigenDestino(txtNombre.getText(), "DESTINO");
-            Consulta();
-            JOptionPane.showMessageDialog(null, "Destino añadido exitosamente");
-            txtNombre.setText(null);
-
+            destinoDAO.insertar(txtNombre.getText());
         } else if (btnAcciones.getText().equals("Añadir") && lblTitulo.getText().equals("EMPRESA")) {
-            insertarEmpresa(txtNombre.getText());
-            JOptionPane.showMessageDialog(null, "Empresa añadida exitosamente");
-            Consulta();
-            txtNombre.setText(null);
+            empresaDAO.insertar(txtNombre.getText());
 //-----------------------------------------------------------------------------------------------------------------------------         
         } else if (btnAcciones.getText().equals("Modificar") && lblTitulo.getText().equals("ORIGEN")) {
-            tomarID();
-            JOptionPane.showMessageDialog(null, "Origen modificado exitosamente");
-            Consulta();
-            txtNombre.setText(null);
-
+            origenDAO.modificar(idActual, txtNombre.getText());
         } else if (btnAcciones.getText().equals("Modificar") && lblTitulo.getText().equals("DESTINO")) {
-            tomarID();
-            JOptionPane.showMessageDialog(null, "Destino modificado exitosamente");
-            Consulta();
-            txtNombre.setText(null);
-
+            destinoDAO.modificar(idActual, txtNombre.getText());
         } else if (btnAcciones.getText().equals("Modificar") && lblTitulo.getText().equals("EMPRESA")) {
-            tomarIDEm();
-            JOptionPane.showMessageDialog(null, "Empresa modificada exitosamente");
-            Consulta();
-            txtNombre.setText(null);
-
+            empresaDAO.modificar(idActual, txtNombre.getText());
 //-----------------------------------------------------------------------------------------------------------------------------
         } else if (btnAcciones.getText().equals("Eliminar") && lblTitulo.getText().equals("ORIGEN")) {
-            eliminarOrigenDestino(txtNombre.getText());
-            JOptionPane.showMessageDialog(null, "El Origen fue eliminado");
-            Consulta();
-            txtNombre.setText(null);
-
+            origenDAO.eliminar(idActual);
         } else if (btnAcciones.getText().equals("Eliminar") && lblTitulo.getText().equals("DESTINO")) {
-            eliminarOrigenDestino(txtNombre.getText());
-            JOptionPane.showMessageDialog(null, "El Destino fue eliminado");
-            Consulta();
-            txtNombre.setText(null);
-
+            destinoDAO.eliminar(idActual);
         } else if (btnAcciones.getText().equals("Eliminar") && lblTitulo.getText().equals("EMPRESA")) {
-            eliminarEmpresa(txtNombre.getText());
-            JOptionPane.showMessageDialog(null, "La Empresa fue eliminada");
-            Consulta();
-            txtNombre.setText(null);
+            empresaDAO.eliminar(idActual);
 //-----------------------------------------------------------------------------------------------------------------------------
         } else {
             JOptionPane.showMessageDialog(null, "Error de entrada");
         }
-
+        llenarTabla();
+        txtNombre.setText(null);
     }
 
-    public void tomarID() {
-        try {
-            String instruccion = "select id from OrigenDestino where nombre ='" + oldPass + "'";
-            Statement stmt = conexion.createStatement();
-            stmt.executeQuery(instruccion);
-            ResultSet rs = stmt.getResultSet();
-
-            while (rs.next()) {
-                number = rs.getInt(1);
-                System.out.println(number);
-            }
-
-            rs.close();
-
-            modificarOrigenDestino(number, txtNombre.getText());
-        } catch (SQLException e) {
-            System.out.println(e);
-        }
-    }
-
-    public void tomarIDEm() {
-
-        try {
-            String instruccion = "select id from Empresa where nombre ='" + oldPass + "'";
-            Statement stmt = conexion.createStatement();
-            stmt.executeQuery(instruccion);
-            ResultSet rs = stmt.getResultSet();
-
-            while (rs.next()) {
-                number = rs.getInt(1);
-                System.out.println(number);
-            }
-
-            rs.close();
-
-            modificarEmpresa(number, txtNombre.getText());
-
-        } catch (SQLException e) {
-            System.out.println(e);
-        }
-    }
-
-    public void Consulta() {
-
+    public void llenarTabla() {
         DefaultTableModel model = (DefaultTableModel) tblNombres.getModel();
         model.setRowCount(0);
-
+        ResultSet consulta = null;
         if (lblTitulo.getText().equals("ORIGEN")) {
-            sql = "SELECT id, nombre FROM OrigenDestino WHERE tipo = 'ORIGEN' ORDER BY nombre ASC";
+            consulta = origenDAO.consultar();
         } else if (lblTitulo.getText().equals("DESTINO")) {
-            sql = "SELECT id, nombre FROM OrigenDestino WHERE tipo = 'DESTINO' ORDER BY nombre ASC";
+            consulta = destinoDAO.consultar();
         } else {
-            sql = "SELECT id, nombre FROM Empresa  ORDER BY nombre ASC";
+            consulta = empresaDAO.consultar();
         }
-
         try {
-            String instruccion = sql;
-            Statement stmt = conexion.createStatement();
-            stmt.executeQuery(instruccion);
-            ResultSet rs = stmt.getResultSet();
-
-            while (rs.next()) {
+            while (consulta.next()) {
                 Vector v = new Vector();
-                v.add(rs.getString(2));
-
+                v.add(consulta.getString("ID"));
+                v.add(consulta.getString("NOMBRE"));
                 model.addRow(v);
-                tblNombres.setModel(model);
             }
-
-            rs.close();
+            tblNombres.setModel(model);
+            consulta.close();
         } catch (SQLException e) {
             System.out.println(e);
-        }
-    }
-
-//----------------------------------------------------------------------------------------    
-    public void insertarOrigenDestino(String nom, String tipo) {
-        try {
-            String instruccion = "INSERT INTO `OrigenDestino` VALUES (NULL,'" + nom + "','" + tipo + "');";
-            PreparedStatement s = conexion.prepareStatement(instruccion);
-            s.executeUpdate();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);
-        }
-    }
-
-    public void modificarOrigenDestino(int idM, String nombreM) {
-        try {
-
-            String instruccion = "UPDATE OrigenDestino Set nombre ='" + nombreM + "' where id =" + idM + " and nombre = @NombreOD";
-            PreparedStatement s = conexion.prepareStatement(instruccion);
-            s.executeUpdate();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);
-        }
-    }
-
-    public void eliminarOrigenDestino(String nom) {
-        try {
-            String instruccion = "DELETE FROM OrigenDestino where nombre ='" + nom + "'";
-            PreparedStatement s = conexion.prepareStatement(instruccion);
-            s.executeUpdate();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);
-        }
-    }
-//----------------------------------------------------------------------------------------
-
-    public void insertarEmpresa(String nombreEmp) {
-        try {
-            String instruccion = "INSERT INTO `cempresa` VALUES (NULL,'" + nombreEmp + "');";
-            PreparedStatement s = conexion.prepareStatement(instruccion);
-            s.executeUpdate();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);
-        }
-    }
-
-    public void modificarEmpresa(int idEmp, String nombreEmp) {
-        try {
-            String instruccion = "UPDATE `cempresa` SET `NOMBRE`='" + nombreEmp + "' WHERE `ID`=" + id + ";";
-            PreparedStatement s = conexion.prepareStatement(instruccion);
-            s.executeUpdate();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);
-        }
-    }
-
-    public void eliminarEmpresa(String nomb) {
-        try {
-            String instruccion = "DELETE FROM `cempresa` WHERE `ID`=" + id + ";";
-            PreparedStatement s = conexion.prepareStatement(instruccion);
-            s.executeUpdate();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "No Se Agreagó :(" + e);
         }
     }
 
@@ -291,15 +153,26 @@ public class OrigenDestino extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Nombre"
+                "ID", "Nombre"
             }
-        ));
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, true
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
         tblNombres.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tblNombresMouseClicked(evt);
             }
         });
         pnlNombres.setViewportView(tblNombres);
+        if (tblNombres.getColumnModel().getColumnCount() > 0) {
+            tblNombres.getColumnModel().getColumn(0).setResizable(false);
+        }
 
         getContentPane().add(pnlNombres, new org.netbeans.lib.awtextra.AbsoluteConstraints(236, 63, 207, 205));
         getContentPane().add(txtNombre, new org.netbeans.lib.awtextra.AbsoluteConstraints(22, 121, 204, 36));
@@ -386,13 +259,11 @@ public class OrigenDestino extends javax.swing.JFrame {
     }//GEN-LAST:event_mnEliminarMouseClicked
 
     private void btnAccionesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAccionesActionPerformed
-
         if (txtNombre.getText().equals(null) || txtNombre.getText().equals("") || txtNombre.getText().equals(" ")) {
             JOptionPane.showMessageDialog(null, "No se realizó la operación, verifique sus datos");
         } else {
-            compararOpciones();
+            comprobarOperacion();
         }
-
     }//GEN-LAST:event_btnAccionesActionPerformed
 
     private void lblCerrarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblCerrarMouseClicked
@@ -402,25 +273,15 @@ public class OrigenDestino extends javax.swing.JFrame {
     }//GEN-LAST:event_lblCerrarMouseClicked
 
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-        Consulta();
+        llenarTabla();
 
     }//GEN-LAST:event_formWindowOpened
 
     private void tblNombresMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblNombresMouseClicked
-        filaSelect = tblNombres.rowAtPoint(evt.getPoint());
-        comprobarAccion();
-        oldPass = txtNombre.getText();
+        int filaSelect = tblNombres.rowAtPoint(evt.getPoint());
+        idActual = Integer.parseInt(String.valueOf(tblNombres.getValueAt(filaSelect, 0)));
+        txtNombre.setText(String.valueOf(tblNombres.getValueAt(filaSelect, 1)));
     }//GEN-LAST:event_tblNombresMouseClicked
-
-    public void comprobarAccion() {
-        if (btnAcciones.getText().equals("Modificar") && lblTitulo.getText().equals("ORIGEN") || btnAcciones.getText().equals("Modificar") && lblTitulo.getText().equals("DESTINO") || btnAcciones.getText().equals("Modificar") && lblTitulo.getText().equals("EMPRESA")) {
-            txtNombre.setText(String.valueOf(tblNombres.getValueAt(filaSelect, 0)));
-
-        } else if (btnAcciones.getText().equals("Eliminar") && lblTitulo.getText().equals("ORIGEN") || btnAcciones.getText().equals("Eliminar") && lblTitulo.getText().equals("DESTINO") || btnAcciones.getText().equals("Eliminar") && lblTitulo.getText().equals("EMPRESA")) {
-            txtNombre.setText(String.valueOf(tblNombres.getValueAt(filaSelect, 0)));
-
-        }
-    }
 
     /**
      * @param args the command line arguments
