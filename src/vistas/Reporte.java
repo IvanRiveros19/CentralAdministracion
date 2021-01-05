@@ -19,6 +19,8 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -53,6 +55,9 @@ public class Reporte extends javax.swing.JFrame {
         llenarComboOrigenes();
         llenarComboEmpresas();
         llenarTabla();
+        
+        ((DefaultEditor) txtHora.getEditor()).getTextField().setEditable(false); 
+        ((DefaultEditor) txtMinutos.getEditor()).getTextField().setEditable(false); 
     }
 
     public void llenarTabla() {
@@ -407,7 +412,7 @@ public class Reporte extends javax.swing.JFrame {
                 btnModificarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnModificar, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 610, -1, -1));
+        getContentPane().add(btnModificar, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 560, -1, -1));
 
         btnEliminar.setBackground(new java.awt.Color(255, 102, 102));
         btnEliminar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
@@ -418,7 +423,7 @@ public class Reporte extends javax.swing.JFrame {
                 btnEliminarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnEliminar, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 610, -1, -1));
+        getContentPane().add(btnEliminar, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 560, -1, -1));
 
         btnAdd.setBackground(new java.awt.Color(102, 255, 102));
         btnAdd.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
@@ -428,8 +433,9 @@ public class Reporte extends javax.swing.JFrame {
                 btnAddActionPerformed(evt);
             }
         });
-        getContentPane().add(btnAdd, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 610, -1, -1));
+        getContentPane().add(btnAdd, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 560, -1, -1));
 
+        btnLimpiar.setBackground(new java.awt.Color(153, 51, 255));
         btnLimpiar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         btnLimpiar.setText("Limpiar");
         btnLimpiar.addActionListener(new java.awt.event.ActionListener() {
@@ -437,8 +443,9 @@ public class Reporte extends javax.swing.JFrame {
                 btnLimpiarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnLimpiar, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 650, -1, -1));
+        getContentPane().add(btnLimpiar, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 620, -1, -1));
 
+        btnCancelar.setBackground(new java.awt.Color(255, 153, 0));
         btnCancelar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         btnCancelar.setText("Cancelar");
         btnCancelar.addActionListener(new java.awt.event.ActionListener() {
@@ -446,7 +453,7 @@ public class Reporte extends javax.swing.JFrame {
                 btnCancelarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnCancelar, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 650, -1, -1));
+        getContentPane().add(btnCancelar, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 620, -1, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
