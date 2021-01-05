@@ -56,10 +56,16 @@ public class Reporte extends javax.swing.JFrame {
         llenarComboEmpresas();
         llenarTabla();
         
-        ((DefaultEditor) txtHora.getEditor()).getTextField().setEditable(false); 
-        ((DefaultEditor) txtMinutos.getEditor()).getTextField().setEditable(false); 
+        noEditables();
+        
     }
 
+    public void noEditables(){
+        ((DefaultEditor) txtHora.getEditor()).getTextField().setEditable(false); 
+        ((DefaultEditor) txtMinutos.getEditor()).getTextField().setEditable(false); 
+        
+    }
+    
     public void llenarTabla() {
         DefaultTableModel model = (DefaultTableModel) tblAdministracion.getModel();
         model.setRowCount(0);
