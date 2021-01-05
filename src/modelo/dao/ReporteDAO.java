@@ -23,7 +23,7 @@ public class ReporteDAO {
 
     public ResultSet llenarTabla() {
         try {
-            sql = "SELECT `treporte`.`ID`, `NUMERO`, `HORA_SALIDA`, `corigen`.`NOMBRE` AS 'ORIGEN', "
+            sql = "SELECT `treporte`.`ID`, `NUMERO`, date_format(`HORA_SALIDA`, '%h:%i') AS 'HORA_SALIDA', `corigen`.`NOMBRE` AS 'ORIGEN', "
                     + "`cdestino`.`NOMBRE` AS 'DESTINO', `cempresa`.`NOMBRE` AS 'EMPRESA', `TIPO_SERVICIO`, "
                     + "`TIPO_CORRIDA`, `NUMERO_ECONOMICO`, `NUMERO_PASAJEROS`, `NUMERO_SALIDA`, date_format(`FECHA`, '%d/%m/%Y') AS 'FECHA_SALIDA' "
                     + "FROM `treporte` "
