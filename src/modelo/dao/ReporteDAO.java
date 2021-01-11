@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package modelo.dao;
 
 import java.awt.HeadlessException;
@@ -90,6 +86,7 @@ public class ReporteDAO {
             JOptionPane.showMessageDialog(null, "Información agregada con éxito");
         } catch (HeadlessException | SQLException e) {
             JOptionPane.showMessageDialog(null, "Ocurrió un error al registrar su información");
+            System.out.println(e);
         }
     }
     
