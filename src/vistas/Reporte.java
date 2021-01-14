@@ -568,6 +568,7 @@ public class Reporte extends javax.swing.JFrame {
 
             reporteDAO.insertar(reporteDTO);
             llenarTabla();
+            limpiar();
         }
     }//GEN-LAST:event_btnAddActionPerformed
 
