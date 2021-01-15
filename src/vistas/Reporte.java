@@ -34,6 +34,7 @@ public class Reporte extends javax.swing.JFrame {
     private Connection conexion = Conexion.getConnection();
     private int idActual;
 
+    Date selectionedDate;
     private ReporteDTO reporteDTO;
     private final ReporteDAO reporteDAO = new ReporteDAO();
 
@@ -48,32 +49,31 @@ public class Reporte extends javax.swing.JFrame {
         this.setContentPane(fondo);
         initComponents();
 
-        /*calRecepcion.getDateEditor().addPropertyChangeListener(
-       new PropertyChangeListener() {
-           @Override
-           public void propertyChange(PropertyChangeEvent e) {
-               if ("date".equals(e.getPropertyName())) {
-                   System.out.println("cambio");
-               }
-           }
-       });*/
+        calAdministracion.getDateEditor().addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent e) {
+                if ("date".equals(e.getPropertyName())) {
+                    selectionedDate = calAdministracion.getDate();
+                    llenarTabla(dbDateFormat.format(selectionedDate));
+                }
+            }
+        });
 
         tblAdministracion.getColumnModel().getColumn(0).setMaxWidth(0);
         tblAdministracion.getColumnModel().getColumn(0).setMinWidth(0);
         tblAdministracion.getTableHeader().getColumnModel().getColumn(0).setMaxWidth(0);
         tblAdministracion.getTableHeader().getColumnModel().getColumn(0).setMinWidth(0);
-
+        calAdministracion.setDate(hoy);
         llenarComboDestinos();
         llenarComboOrigenes();
         llenarComboEmpresas();
-        llenarTabla();
     }
 
-    public void llenarTabla() {
+    public void llenarTabla(String fecha) {
         DefaultTableModel model = (DefaultTableModel) tblAdministracion.getModel();
         model.setRowCount(0);
         try {
-            ResultSet rs = reporteDAO.llenarTabla();
+            ResultSet rs = reporteDAO.llenarTabla(fecha);
             while (rs.next()) {
                 Vector v = new Vector();
                 v.add(rs.getString("ID"));
@@ -140,7 +140,7 @@ public class Reporte extends javax.swing.JFrame {
     }
 
     public void limpiar() {
-        calAdministracion.setDate(null);
+        calAdministracion.setDate(hoy);
         calAdministracion.setToolTipText(null);
         txtHora.setValue("00");
         txtMinutos.setValue("00");
@@ -538,7 +538,7 @@ public class Reporte extends javax.swing.JFrame {
             btnAdd.setEnabled(true);
             btnModificar.setEnabled(false);
             btnEliminar.setEnabled(false);
-            llenarTabla();
+            llenarTabla(dbDateFormat.format(selectionedDate));
         }
     }//GEN-LAST:event_btnModificarActionPerformed
 
@@ -548,7 +548,7 @@ public class Reporte extends javax.swing.JFrame {
         btnModificar.setEnabled(false);
         btnEliminar.setEnabled(false);
         limpiar();
-        llenarTabla();
+        llenarTabla(dbDateFormat.format(selectionedDate));
     }//GEN-LAST:event_btnEliminarActionPerformed
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
@@ -569,7 +569,8 @@ public class Reporte extends javax.swing.JFrame {
             reporteDTO.setNumeroSalida(Integer.parseInt(txtNosalida.getText().trim()));
 
             reporteDAO.insertar(reporteDTO);
-            llenarTabla();
+            llenarTabla(dbDateFormat.format(selectionedDate));
+            limpiar();
         }
     }//GEN-LAST:event_btnAddActionPerformed
 

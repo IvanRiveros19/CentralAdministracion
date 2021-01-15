@@ -19,7 +19,7 @@ public class ReporteDAO {
     private ResultSet rs;
     private String sql;
 
-    public ResultSet llenarTabla() {
+    public ResultSet llenarTabla(String fecha) {
         try {
             sql = "SELECT `treporte`.`ID`, `NUMERO`, date_format(`HORA_SALIDA`, '%h:%i') AS 'HORA_SALIDA', `corigen`.`NOMBRE` AS 'ORIGEN', "
                     + "`cdestino`.`NOMBRE` AS 'DESTINO', `cempresa`.`NOMBRE` AS 'EMPRESA', `TIPO_SERVICIO`, "
@@ -28,6 +28,7 @@ public class ReporteDAO {
                     + "INNER JOIN `corigen` ON `treporte`.`CORIGEN_ID`=`corigen`.`ID` "
                     + "INNER JOIN `cdestino` ON `treporte`.`CDESTINO_ID`=`cdestino`.`ID` "
                     + "INNER JOIN `cempresa` ON `treporte`.`CEMPRESA_ID`=`cempresa`.`ID` "
+                    + "WHERE `FECHA`='" + fecha + "'"
                     + "ORDER BY `FECHA` ASC, `NUMERO` ASC;";
             Statement stmt = conexion.createStatement();
             stmt.executeQuery(sql);
