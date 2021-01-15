@@ -50,7 +50,7 @@ public class ReporteDAO {
         }
         return rs;
     }
-
+    
     public ResultSet llenarComboDestinos() {
         try {
             sql = "SELECT `NOMBRE` FROM `cdestino` ORDER BY `NOMBRE` ASC";
@@ -62,7 +62,7 @@ public class ReporteDAO {
         }
         return rs;
     }
-
+    
     public ResultSet llenarComboEmpresas() {
         try {
             sql = "SELECT `NOMBRE` FROM `cempresa` ORDER BY `NOMBRE` ASC";
@@ -74,7 +74,7 @@ public class ReporteDAO {
         }
         return rs;
     }
-
+    
     public void insertar(ReporteDTO reporte) {
         try {
             sql = "INSERT INTO `treporte` VALUES (NULL,'" + getNumero(reporte.getFecha()) + "','" + reporte.getHoraSalida()
@@ -90,7 +90,7 @@ public class ReporteDAO {
             JOptionPane.showMessageDialog(null, "Ocurrió un error al registrar su información");
         }
     }
-
+    
     public int getNumero(String date) {
         int maximo = 0;
         try {
@@ -108,8 +108,8 @@ public class ReporteDAO {
         }
         return maximo;
     }
-
-    public void actualizar(ReporteDTO reporte) {
+    
+    public void actualizar(ReporteDTO reporte){
         try {
             sql = "UPDATE `treporte` SET `HORA_SALIDA`='" + reporte.getHoraSalida() + "', "
                     + "`CORIGEN_ID`=(SELECT `ID` FROM `corigen` WHERE `NOMBRE`='" + reporte.getOrigen() + "'),"
@@ -180,7 +180,7 @@ public class ReporteDAO {
         }
         return toArrayList(rs);
     }
-    
+
     public ArrayList<HashMap> toArrayList(ResultSet rs) {
         ArrayList<HashMap> results = new ArrayList();
         try {

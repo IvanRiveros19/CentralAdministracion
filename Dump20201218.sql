@@ -3,7 +3,7 @@
 -- Host: localhost    Database: central_autobuses
 -- ------------------------------------------------------
 -- Server version	5.7.26-log
-create database Central_Autobuses;
+-- create database Central_Autobuses;
 use Central_Autobuses;
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -112,6 +112,7 @@ CREATE TABLE `treporte` (
     `NUMERO_PASAJEROS` int(11) NOT NULL,
     `NUMERO_SALIDA` int(11) NOT NULL,
     `FECHA` date NOT NULL,
+    `CREATED_DATE` date NOT NULL,
     PRIMARY KEY (`ID`),
     KEY `corigen_treporte_idx` (`CORIGEN_ID`),
     KEY `cdestino_treporte_idx` (`CDESTINO_ID`),
@@ -148,4 +149,6 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+
+select * from treporte;
 -- Dump completed on 2020-12-29 16:26:09
