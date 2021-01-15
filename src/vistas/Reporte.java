@@ -3,6 +3,8 @@ package vistas;
 import modelo.conexion.Conexion;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -23,6 +26,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import modelo.dao.ReporteDAO;
+import modelo.dao.toExcel;
 import modelo.dto.ReporteDTO;
 
 public class Reporte extends javax.swing.JFrame {
@@ -31,7 +35,7 @@ public class Reporte extends javax.swing.JFrame {
     private int idActual;
 
     private ReporteDTO reporteDTO;
-    private ReporteDAO reporteDAO = new ReporteDAO();
+    private final ReporteDAO reporteDAO = new ReporteDAO();
 
     Date hoy = new Date();
     SimpleDateFormat calendarDateFormat = new SimpleDateFormat("dd/MM/yyyy");
@@ -43,6 +47,16 @@ public class Reporte extends javax.swing.JFrame {
     public Reporte() {
         this.setContentPane(fondo);
         initComponents();
+
+        /*calRecepcion.getDateEditor().addPropertyChangeListener(
+       new PropertyChangeListener() {
+           @Override
+           public void propertyChange(PropertyChangeEvent e) {
+               if ("date".equals(e.getPropertyName())) {
+                   System.out.println("cambio");
+               }
+           }
+       });*/
 
         tblAdministracion.getColumnModel().getColumn(0).setMaxWidth(0);
         tblAdministracion.getColumnModel().getColumn(0).setMinWidth(0);
@@ -77,7 +91,7 @@ public class Reporte extends javax.swing.JFrame {
                 model.addRow(v);
             }
             rs.close();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             System.out.println(e);
         }
         tblAdministracion.setModel(model);
@@ -452,7 +466,8 @@ public class Reporte extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void lblArchivosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblArchivosMouseClicked
-        // TODO add your handling code here:
+        Date date = calAdministracion.getDate();
+        new toExcel().generateCSVfile(calendarDateFormat.format(date));
     }//GEN-LAST:event_lblArchivosMouseClicked
 
     private void lblAddorigenMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblAddorigenMouseClicked
