@@ -7,7 +7,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import javax.swing.JOptionPane;
 import modelo.conexion.Conexion;
@@ -15,6 +17,7 @@ import modelo.dto.ReporteDTO;
 
 public class ReporteDAO {
 
+    private SimpleDateFormat dbDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private Connection conexion = Conexion.getConnection();
     private ResultSet rs;
     private String sql;
@@ -82,11 +85,13 @@ public class ReporteDAO {
                     + "(SELECT `ID` FROM `cdestino` WHERE `NOMBRE`='" + reporte.getDestino() + "'),"
                     + "(SELECT `ID` FROM `cempresa` WHERE `NOMBRE`='" + reporte.getEmpresa() + "'),"
                     + "'" + reporte.getTipoServicio() + "','" + reporte.getTipoCorrida() + "','" + reporte.getNumeroEconomico() + "','"
-                    + reporte.getNumeroPasajeros() + "','" + reporte.getNumeroSalida() + "', '" + reporte.getFecha() + "', now());";
+                    + reporte.getNumeroPasajeros() + "','" + reporte.getNumeroSalida() + "', 1, '" + reporte.getFecha() + "', now());";
             PreparedStatement s = conexion.prepareStatement(sql);
+            System.out.println("insertar: " + sql);
             s.executeUpdate();
             JOptionPane.showMessageDialog(null, "Información agregada con éxito");
         } catch (HeadlessException | SQLException e) {
+            System.out.println("Error al registrar: " + e);
             JOptionPane.showMessageDialog(null, "Ocurrió un error al registrar su información");
         }
     }
@@ -149,7 +154,6 @@ public class ReporteDAO {
                     + "INNER JOIN `cempresa` ON `treporte`.`CEMPRESA_ID`=`cempresa`.`ID` "
                     + "WHERE `FECHA`='" + fecha + "' "
                     + "ORDER BY `FECHA` ASC, `NUMERO` ASC;";
-            System.out.println(sql);
             Statement stmt = conexion.createStatement();
             stmt.executeQuery(sql);
             rs = stmt.getResultSet();
@@ -159,8 +163,8 @@ public class ReporteDAO {
         return rs;
     }
 
-    public ArrayList reporteMes(String fecha) {
-        fecha = fecha.substring(0, 7);
+    public ArrayList reporteMes(Date fecha) {
+        String mes = dbDateFormat.format(fecha).substring(0, 7);
         try {
             sql = "SELECT `treporte`.`ID`, `NUMERO`, date_format(`HORA_SALIDA`, '%h:%i') AS 'HORA_SALIDA', "
                     + "`cdestino`.`NOMBRE` AS 'DESTINO', `corigen`.`NOMBRE` AS 'ORIGEN', `cempresa`.`NOMBRE` AS 'EMPRESA', `TIPO_SERVICIO`, "
@@ -169,20 +173,45 @@ public class ReporteDAO {
                     + "INNER JOIN `corigen` ON `treporte`.`CORIGEN_ID`=`corigen`.`ID` "
                     + "INNER JOIN `cdestino` ON `treporte`.`CDESTINO_ID`=`cdestino`.`ID` "
                     + "INNER JOIN `cempresa` ON `treporte`.`CEMPRESA_ID`=`cempresa`.`ID` "
-                    + "WHERE date_format(`FECHA`, '%Y-%m')='" + fecha + "' "
-                    + "ORDER BY `FECHA` ASC, `NUMERO` ASC;";
-            System.out.println(sql);
+                    + "WHERE date_format(`FECHA`, '%Y-%m')='" + mes + "' "
+                    + "ORDER BY `EMPRESA` ASC, `FECHA` ASC, `NUMERO` ASC;";
             Statement stmt = conexion.createStatement();
             stmt.executeQuery(sql);
             rs = stmt.getResultSet();
         } catch (Exception e) {
-            System.out.print(e);
+            System.out.print("Error al consultar registros por mes: " + e);
+        }
+        return toArrayList(rs);
+    }
+    
+    //Funcion que obtiene los registros para generar la tabla principal del reporte
+    public ArrayList informeGeneralMes(Date fecha) {
+        String mes = dbDateFormat.format(fecha).substring(0, 7);
+        try {
+            sql = "SELECT `treporte`.`ID`, `NUMERO`, date_format(`HORA_SALIDA`, '%h:%i') AS 'HORA_SALIDA', "
+                    + "`cdestino`.`NOMBRE` AS 'DESTINO', `corigen`.`NOMBRE` AS 'ORIGEN', `cempresa`.`NOMBRE` AS 'EMPRESA', `TIPO_SERVICIO`, "
+                    + "`TIPO_CORRIDA`, `NUMERO_ECONOMICO`, `NUMERO_PASAJEROS`, `NUMERO_SALIDA`, date_format(`FECHA`, '%d/%m/%Y') AS 'FECHA_SALIDA' "
+                    + "FROM `treporte` "
+                    + "INNER JOIN `corigen` ON `treporte`.`CORIGEN_ID`=`corigen`.`ID` "
+                    + "INNER JOIN `cdestino` ON `treporte`.`CDESTINO_ID`=`cdestino`.`ID` "
+                    + "INNER JOIN `cempresa` ON `treporte`.`CEMPRESA_ID`=`cempresa`.`ID` "
+                    + "WHERE date_format(`FECHA`, '%Y-%m')='" + mes + "' "
+                    + "ORDER BY `FECHA` ASC, `NUMERO` ASC;";
+            Statement stmt = conexion.createStatement();
+            stmt.executeQuery(sql);
+            rs = stmt.getResultSet();
+        } catch (Exception e) {
+            System.out.print("Error al consultar registros por mes: " + e);
         }
         return toArrayList(rs);
     }
 
+    //Método para convertir un Resultset a ArrayList
     public ArrayList<HashMap> toArrayList(ResultSet rs) {
         ArrayList<HashMap> results = new ArrayList();
+        if (rs == null) {
+            return results;
+        }
         try {
             ResultSetMetaData md = rs.getMetaData();
             int columns = md.getColumnCount();
@@ -198,5 +227,30 @@ public class ReporteDAO {
             System.out.println("Error al convertir en ArrayList");
         }
         return results;
+    }
+    
+    public ArrayList getInfoResumen(Date fecha) {
+        String date = dbDateFormat.format(fecha);
+        try {
+            sql = "SELECT NOMBRE AS 'empresa', count(r.CEMPRESA_ID) AS 'numCorridas',"
+                    + "sum(ifnull(r.NUMERO_PASAJEROS, 0)) AS 'numPasajeros', "
+                    + "sum(if(r.CANCELADA = true, 1, 0)) AS 'canceladas', "
+                    + "sum(if(r.CANCELADA = false, 1, 0)) AS 'totalSalidas' "
+                    + "FROM `cempresa` e "
+                    + "LEFT JOIN `treporte` r on e.ID = r.CEMPRESA_ID "
+                    + "AND r.FECHA='" + date + "' "
+                    + "GROUP BY e.NOMBRE "
+                    + "UNION SELECT 'TOTAL', count(*), sum(NUMERO_PASAJEROS), "
+                    + "sum(if(CANCELADA = true, 1, 0)) AS 'canceladas', "
+                    + "sum(if(CANCELADA = false, 1, 0)) AS 'totalSalidas' "
+                    + "FROM treporte "
+                    + "WHERE FECHA='" + date + "'";
+            Statement stmt = conexion.createStatement();
+            stmt.executeQuery(sql);
+            rs = stmt.getResultSet();            
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+        return toArrayList(rs);
     }
 }
