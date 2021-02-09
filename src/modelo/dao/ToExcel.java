@@ -18,6 +18,7 @@ import org.apache.poi.POIXMLProperties;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Drawing;
@@ -27,6 +28,7 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -87,9 +89,10 @@ public class ToExcel {
         }
     }
 
-    public void generateXLSXfile(Date fecha) {
+    //INICIA SECCIÓN DE MÉTODOS PARA CREAR EL REPORTE POR MES
+    public void generarReporteMes(Date fecha) {
         try {
-            ArrayList<HashMap> registros = reporteDAO.informeGeneralMes(fecha);
+            ArrayList<HashMap> registros = reporteDAO.informeGeneral("mes", fecha);
             String nombreArchivo = (new SimpleDateFormat("MMMM 'DE' yyyy").format(fecha)).toUpperCase();
             if (registros.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "No hay registros para " + nombreArchivo.toLowerCase());
@@ -146,7 +149,7 @@ public class ToExcel {
 
             tablaInfo(fechaRegistro);
 
-            registros = reporteDAO.reporteMes(fecha);
+            registros = reporteDAO.obtenerRegistrosReporte("mes", fecha);
 
             fechaRegistro = registros.get(0).get("FECHA_SALIDA").toString();
             String empresaRegistro = registros.get(0).get("EMPRESA").toString();
@@ -195,13 +198,9 @@ public class ToExcel {
                 celda.setCellStyle(grayCellStyle);
                 indexRow++;
             }
-
-            salida = new FileOutputStream(file);
-            workbook.write(salida);
-            workbook.close();
-            System.out.println("Archivo creado existosamente en " + file.getAbsolutePath());
+            save();
         } catch (Exception ex) {
-            System.out.println("Error al escribir en el disco: " + ex);
+            JOptionPane.showMessageDialog(null, "No hay registros para la fecha seleccionada");
         }
     }
 
@@ -404,6 +403,248 @@ public class ToExcel {
             }
         } catch (ParseException ex) {
             System.out.println("Error en el formato de hora");
+        }
+    }
+    //FINALIZA SECCIÓN DE MÉTODOS PARA CREAR EL REPORTE POR MES
+
+    public void generarReporteDia(Date fecha) {
+        try {
+            ArrayList<HashMap> registros = reporteDAO.informeGeneral("dia", fecha);
+            String nombreArchivo = (new SimpleDateFormat("dd 'DE' MMMM 'DE' yyyy").format(fecha)).toUpperCase();
+            if (registros.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "No hay registros para " + nombreArchivo.toLowerCase());
+                return;
+            }
+
+            file = new File("files\\xDia\\" + nombreArchivo + ".xlsx");
+            POIXMLProperties.CoreProperties coreProp = props.getCoreProperties();
+            coreProp.setCreator("Gerencia");
+
+            excelSheet = workbook.createSheet("EB");
+            nuevaTablaDia(fecha);
+            for (int i = 0; i < registros.size(); i++) {
+                fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+                celda = fila.createCell(indexColumn + 1);
+                celda.setCellValue(registros.get(i).get("NUMERO").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 2);
+                celda.setCellValue(registros.get(i).get("HORA_SALIDA").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 3);
+                celda.setCellValue(registros.get(i).get("DESTINO").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 4);
+                celda.setCellValue(registros.get(i).get("EMPRESA").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 5);
+                celda.setCellValue(registros.get(i).get("TIPO_CORRIDA").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 6);
+                celda.setCellValue(registros.get(i).get("NUMERO_ECONOMICO").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 7);
+                celda.setCellValue(registros.get(i).get("NUMERO_PASAJEROS").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 8);
+                celda.setCellValue(registros.get(i).get("NUMERO_SALIDA").toString());
+                celda.setCellStyle(grayCellStyle);
+                indexRow++;
+            }
+
+            registros = reporteDAO.obtenerRegistrosReporte("dia", fecha);
+
+            String empresaRegistro = registros.get(0).get("EMPRESA").toString();
+            excelSheet = workbook.createSheet(registros.get(0).get("EMPRESA").toString());
+            nuevaTablaDia(fecha);
+            for (int i = 0; i < registros.size(); i++) {
+                if (!empresaRegistro.equals(registros.get(i).get("EMPRESA").toString())) {
+                    excelSheet = workbook.createSheet(registros.get(i).get("EMPRESA").toString());
+                    empresaRegistro = registros.get(i).get("EMPRESA").toString();
+                    nuevaTablaDia(fecha);
+                }
+                fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+                celda = fila.createCell(indexColumn + 1);
+                celda.setCellValue(registros.get(i).get("NUMERO").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 2);
+                celda.setCellValue(registros.get(i).get("HORA_SALIDA").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 3);
+                celda.setCellValue(registros.get(i).get("DESTINO").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 4);
+                celda.setCellValue(registros.get(i).get("EMPRESA").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 5);
+                celda.setCellValue(registros.get(i).get("TIPO_CORRIDA").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 6);
+                celda.setCellValue(registros.get(i).get("NUMERO_ECONOMICO").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 7);
+                celda.setCellValue(registros.get(i).get("NUMERO_PASAJEROS").toString());
+                celda.setCellStyle(grayCellStyle);
+                celda = fila.createCell(indexColumn + 8);
+                celda.setCellValue(registros.get(i).get("NUMERO_SALIDA").toString());
+                celda.setCellStyle(grayCellStyle);
+                indexRow++;
+            }
+            save();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "No hay registros para la fecha seleccionada: " + ex);
+        }
+    }
+
+    public void nuevaTablaDia(Date fechaRegistro) {
+        indexRow = 0;
+        indexColumn = 0;
+
+        XSSFFont titleFont = workbook.createFont();
+        titleFont.setBold(true);
+        titleFont.setFontName("Arial");
+        titleFont.setFontHeight(16);
+        CellStyle principalCellStyle = workbook.createCellStyle();
+        principalCellStyle.setAlignment(HorizontalAlignment.CENTER);
+        principalCellStyle.setFont(titleFont);
+
+        CellStyle infoCellStyle = workbook.createCellStyle();
+        infoCellStyle.setFont(boldFont);
+
+        CellStyle infoCellStyleNormal = workbook.createCellStyle();
+        infoCellStyleNormal.setFont(noBoldFont);
+
+        CellStyle yellowCellStyle = workbook.createCellStyle();
+        yellowCellStyle.setFillForegroundColor(IndexedColors.YELLOW1.getIndex());
+        yellowCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        yellowCellStyle.setAlignment(HorizontalAlignment.RIGHT);
+        infoCellStyleNormal.setFont(noBoldFont);
+
+        CreationHelper helper = workbook.getCreationHelper();
+        Drawing drawing = excelSheet.createDrawingPatriarch();
+
+        ClientAnchor anchor = helper.createClientAnchor();
+        anchor.setCol1(indexColumn + 5);
+        anchor.setRow1(indexRow + 1);
+        anchor.setCol2(indexColumn + 8);
+        anchor.setRow2(indexRow + 9);
+        drawing.createPicture(anchor, pictureIdx);
+
+        fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+        celda = fila.createCell(indexColumn + 1);
+        celda.setCellValue("FORMATO DE SALIDAS DE AUTOBUS EN CENTRAL.");
+        excelSheet.addMergedRegion(new CellRangeAddress(indexRow, indexRow, indexColumn + 1, indexColumn + 6));
+        celda.setCellStyle(principalCellStyle);
+        indexRow++;
+        fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+        celda = fila.createCell(indexColumn);
+        celda.setCellValue("Hoja de Registro No. 1");
+        celda.setCellStyle(infoCellStyle);
+        indexRow++;
+        fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+        celda = fila.createCell(indexColumn);
+        celda.setCellValue("POBLACION:");
+        celda.setCellStyle(infoCellStyle);
+        celda = fila.createCell(indexColumn + 3);
+        celda.setCellValue("TULANCINGO");
+        celda.setCellStyle(infoCellStyle);
+        indexRow++;
+        fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+        celda = fila.createCell(indexColumn);
+        celda.setCellValue("NOMBRE DE LA  CENTRAL O TERMINAL DE AUTOBUSES:");
+        celda.setCellStyle(infoCellStyle);
+        indexRow++;
+        fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+        celda = fila.createCell(indexColumn + 3);
+        celda.setCellValue("CENTRAL DE AUTOBUSES DE TULANCINGO S.A. DE C.V.");
+        celda.setCellStyle(infoCellStyle);
+        indexRow++;
+        fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+        celda = fila.createCell(indexColumn);
+        celda.setCellValue("DIRECCION:");
+        celda.setCellStyle(infoCellStyle);
+        celda = fila.createCell(indexColumn + 3);
+        celda.setCellValue("CARRETERA MEXICO-TUXPAN KM. 143");
+        celda.setCellStyle(infoCellStyleNormal);
+        indexRow++;
+        fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+        celda = fila.createCell(indexColumn + 3);
+        celda.setCellValue("COL. NUEVO TULANCINGO. C.P. 43612");
+        celda.setCellStyle(infoCellStyleNormal);
+        indexRow++;
+        fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+        celda = fila.createCell(indexColumn);
+        celda.setCellValue("FECHA DE ELABORACIÓN:");
+        celda.setCellStyle(infoCellStyle);
+        celda = fila.createCell(indexColumn + 3);
+        celda.setCellValue(shortFormatDate.format(hoy));
+        celda.setCellStyle(infoCellStyleNormal);
+        indexRow++;
+        fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+        celda = fila.createCell(indexColumn);
+        celda.setCellValue("REGISTRO DE SALIDAS CORRESPONDIENTE AL  DIA:");
+        celda.setCellStyle(infoCellStyle);
+        celda = fila.createCell(indexColumn + 3);
+        celda.setCellValue((new SimpleDateFormat("dd 'DE' MMMM 'DE' yyyy").format(fechaRegistro)).toLowerCase());
+        celda.setCellStyle(yellowCellStyle);
+        indexRow += 2;
+
+        CellStyle headerCellStyle = workbook.createCellStyle();
+        headerCellStyle.setBorderTop(BorderStyle.MEDIUM);
+        headerCellStyle.setBorderLeft(BorderStyle.MEDIUM);
+        headerCellStyle.setBorderRight(BorderStyle.MEDIUM);
+        headerCellStyle.setBorderBottom(BorderStyle.MEDIUM);
+        headerCellStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerCellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        headerCellStyle.setWrapText(true);
+        headerCellStyle.setFont(boldFont);
+
+        excelSheet.setColumnWidth(indexColumn, 20 * 256);
+        excelSheet.setColumnWidth(indexColumn + 1, 15 * 256);
+        excelSheet.setColumnWidth(indexColumn + 2, 15 * 256);
+        excelSheet.setColumnWidth(indexColumn + 3, 35 * 256);
+        excelSheet.setColumnWidth(indexColumn + 4, 29 * 256);
+        excelSheet.setColumnWidth(indexColumn + 5, 10 * 256);
+        excelSheet.setColumnWidth(indexColumn + 6, 11 * 256);
+        excelSheet.setColumnWidth(indexColumn + 7, 10 * 256);
+        excelSheet.setColumnWidth(indexColumn + 8, 11 * 256);
+
+        fila = excelSheet.getRow(indexRow) != null ? excelSheet.getRow(indexRow) : excelSheet.createRow(indexRow);
+        fila.setHeight((short) (100 * 20));
+        celda = fila.createCell(indexColumn + 1);
+        celda.setCellValue("No.");
+        celda.setCellStyle(headerCellStyle);
+        celda = fila.createCell(indexColumn + 2);
+        celda.setCellValue("HORA DE SALIDA.");
+        celda.setCellStyle(headerCellStyle);
+        celda = fila.createCell(indexColumn + 3);
+        celda.setCellValue("DESTINO");
+        celda.setCellStyle(headerCellStyle);
+        celda = fila.createCell(indexColumn + 4);
+        celda.setCellValue("EMPRESA");
+        celda.setCellStyle(headerCellStyle);
+        celda = fila.createCell(indexColumn + 5);
+        celda.setCellValue("CORRIDA EXTRA");
+        celda.setCellStyle(headerCellStyle);
+        celda = fila.createCell(indexColumn + 6);
+        celda.setCellValue("NUMERO ECONOMICO DE AUTOBUS");
+        celda.setCellStyle(headerCellStyle);
+        celda = fila.createCell(indexColumn + 7);
+        celda.setCellValue("N° DE PASAJEROS");
+        celda.setCellStyle(headerCellStyle);
+        celda = fila.createCell(indexColumn + 8);
+        celda.setCellValue("N° DE SALIDA DE AUTOBUS");
+        celda.setCellStyle(headerCellStyle);
+        indexRow++;
+    }
+
+    public void save() {
+        try {
+            salida = new FileOutputStream(file);
+            workbook.write(salida);
+            workbook.close();
+            System.out.println("Archivo creado existosamente en " + file.getAbsolutePath());
+        } catch (Exception ex) {
+            System.out.println("Ocurrió un error al guardar el archivo: " + ex);
         }
     }
 

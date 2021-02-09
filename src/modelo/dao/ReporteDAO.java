@@ -162,9 +162,17 @@ public class ReporteDAO {
         }
         return rs;
     }
-
-    public ArrayList reporteMes(Date fecha) {
-        String mes = dbDateFormat.format(fecha).substring(0, 7);
+    
+    //Funcion que obtiene los registros para generar la tabla principal del reporte
+    public ArrayList informeGeneral(String tipo, Date fecha) {
+        String where = "";
+        if (tipo.equals("mes")) {
+            where = "WHERE date_format(`FECHA`, '%Y-%m')='" + dbDateFormat.format(fecha).substring(0, 7) + "' ";
+        } else if (tipo.equals("dia")) {
+            where = "WHERE `FECHA`='" + dbDateFormat.format(fecha) + "' ";
+        } else {
+            return null;
+        }
         try {
             sql = "SELECT `treporte`.`ID`, `NUMERO`, date_format(`HORA_SALIDA`, '%h:%i') AS 'HORA_SALIDA', "
                     + "`cdestino`.`NOMBRE` AS 'DESTINO', `corigen`.`NOMBRE` AS 'ORIGEN', `cempresa`.`NOMBRE` AS 'EMPRESA', `TIPO_SERVICIO`, "
@@ -173,7 +181,36 @@ public class ReporteDAO {
                     + "INNER JOIN `corigen` ON `treporte`.`CORIGEN_ID`=`corigen`.`ID` "
                     + "INNER JOIN `cdestino` ON `treporte`.`CDESTINO_ID`=`cdestino`.`ID` "
                     + "INNER JOIN `cempresa` ON `treporte`.`CEMPRESA_ID`=`cempresa`.`ID` "
-                    + "WHERE date_format(`FECHA`, '%Y-%m')='" + mes + "' "
+                    + where
+                    + "ORDER BY `FECHA` ASC, `NUMERO` ASC;";
+            Statement stmt = conexion.createStatement();
+            stmt.executeQuery(sql);
+            rs = stmt.getResultSet();
+        } catch (Exception e) {
+            System.out.print("Error al consultar registros por mes: " + e);
+        }
+        return toArrayList(rs);
+    }
+    
+    public ArrayList obtenerRegistrosReporte(String tipo, Date fecha) {
+        String where = "";
+        if (tipo.equals("mes")) {
+            where = "WHERE date_format(`FECHA`, '%Y-%m')='" + dbDateFormat.format(fecha).substring(0, 7) + "' ";
+        } else if (tipo.equals("dia")) {
+            where = "WHERE `FECHA`='" + dbDateFormat.format(fecha) + "' ";
+        } else {
+            return null;
+        }
+        
+        try {
+            sql = "SELECT `treporte`.`ID`, `NUMERO`, date_format(`HORA_SALIDA`, '%h:%i') AS 'HORA_SALIDA', "
+                    + "`cdestino`.`NOMBRE` AS 'DESTINO', `corigen`.`NOMBRE` AS 'ORIGEN', `cempresa`.`NOMBRE` AS 'EMPRESA', `TIPO_SERVICIO`, "
+                    + "`TIPO_CORRIDA`, `NUMERO_ECONOMICO`, `NUMERO_PASAJEROS`, `NUMERO_SALIDA`, date_format(`FECHA`, '%d/%m/%Y') AS 'FECHA_SALIDA' "
+                    + "FROM `treporte` "
+                    + "INNER JOIN `corigen` ON `treporte`.`CORIGEN_ID`=`corigen`.`ID` "
+                    + "INNER JOIN `cdestino` ON `treporte`.`CDESTINO_ID`=`cdestino`.`ID` "
+                    + "INNER JOIN `cempresa` ON `treporte`.`CEMPRESA_ID`=`cempresa`.`ID` "
+                    + where
                     + "ORDER BY `EMPRESA` ASC, `FECHA` ASC, `NUMERO` ASC;";
             Statement stmt = conexion.createStatement();
             stmt.executeQuery(sql);
@@ -184,24 +221,27 @@ public class ReporteDAO {
         return toArrayList(rs);
     }
     
-    //Funcion que obtiene los registros para generar la tabla principal del reporte
-    public ArrayList informeGeneralMes(Date fecha) {
-        String mes = dbDateFormat.format(fecha).substring(0, 7);
+    public ArrayList getInfoResumen(Date fecha) {
+        String date = dbDateFormat.format(fecha);
         try {
-            sql = "SELECT `treporte`.`ID`, `NUMERO`, date_format(`HORA_SALIDA`, '%h:%i') AS 'HORA_SALIDA', "
-                    + "`cdestino`.`NOMBRE` AS 'DESTINO', `corigen`.`NOMBRE` AS 'ORIGEN', `cempresa`.`NOMBRE` AS 'EMPRESA', `TIPO_SERVICIO`, "
-                    + "`TIPO_CORRIDA`, `NUMERO_ECONOMICO`, `NUMERO_PASAJEROS`, `NUMERO_SALIDA`, date_format(`FECHA`, '%d/%m/%Y') AS 'FECHA_SALIDA' "
-                    + "FROM `treporte` "
-                    + "INNER JOIN `corigen` ON `treporte`.`CORIGEN_ID`=`corigen`.`ID` "
-                    + "INNER JOIN `cdestino` ON `treporte`.`CDESTINO_ID`=`cdestino`.`ID` "
-                    + "INNER JOIN `cempresa` ON `treporte`.`CEMPRESA_ID`=`cempresa`.`ID` "
-                    + "WHERE date_format(`FECHA`, '%Y-%m')='" + mes + "' "
-                    + "ORDER BY `FECHA` ASC, `NUMERO` ASC;";
+            sql = "SELECT NOMBRE AS 'empresa', count(r.CEMPRESA_ID) AS 'numCorridas',"
+                    + "sum(ifnull(r.NUMERO_PASAJEROS, 0)) AS 'numPasajeros', "
+                    + "sum(if(r.CANCELADA = true, 1, 0)) AS 'canceladas', "
+                    + "sum(if(r.CANCELADA = false, 1, 0)) AS 'totalSalidas' "
+                    + "FROM `cempresa` e "
+                    + "LEFT JOIN `treporte` r on e.ID = r.CEMPRESA_ID "
+                    + "AND r.FECHA='" + date + "' "
+                    + "GROUP BY e.NOMBRE "
+                    + "UNION SELECT 'TOTAL', count(*), sum(NUMERO_PASAJEROS), "
+                    + "sum(if(CANCELADA = true, 1, 0)) AS 'canceladas', "
+                    + "sum(if(CANCELADA = false, 1, 0)) AS 'totalSalidas' "
+                    + "FROM treporte "
+                    + "WHERE FECHA='" + date + "'";
             Statement stmt = conexion.createStatement();
             stmt.executeQuery(sql);
-            rs = stmt.getResultSet();
-        } catch (Exception e) {
-            System.out.print("Error al consultar registros por mes: " + e);
+            rs = stmt.getResultSet();            
+        } catch (SQLException e) {
+            System.out.println(e);
         }
         return toArrayList(rs);
     }
@@ -229,28 +269,4 @@ public class ReporteDAO {
         return results;
     }
     
-    public ArrayList getInfoResumen(Date fecha) {
-        String date = dbDateFormat.format(fecha);
-        try {
-            sql = "SELECT NOMBRE AS 'empresa', count(r.CEMPRESA_ID) AS 'numCorridas',"
-                    + "sum(ifnull(r.NUMERO_PASAJEROS, 0)) AS 'numPasajeros', "
-                    + "sum(if(r.CANCELADA = true, 1, 0)) AS 'canceladas', "
-                    + "sum(if(r.CANCELADA = false, 1, 0)) AS 'totalSalidas' "
-                    + "FROM `cempresa` e "
-                    + "LEFT JOIN `treporte` r on e.ID = r.CEMPRESA_ID "
-                    + "AND r.FECHA='" + date + "' "
-                    + "GROUP BY e.NOMBRE "
-                    + "UNION SELECT 'TOTAL', count(*), sum(NUMERO_PASAJEROS), "
-                    + "sum(if(CANCELADA = true, 1, 0)) AS 'canceladas', "
-                    + "sum(if(CANCELADA = false, 1, 0)) AS 'totalSalidas' "
-                    + "FROM treporte "
-                    + "WHERE FECHA='" + date + "'";
-            Statement stmt = conexion.createStatement();
-            stmt.executeQuery(sql);
-            rs = stmt.getResultSet();            
-        } catch (SQLException e) {
-            System.out.println(e);
-        }
-        return toArrayList(rs);
-    }
 }
