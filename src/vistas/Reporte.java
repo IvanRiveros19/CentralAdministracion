@@ -66,6 +66,7 @@ public class Reporte extends javax.swing.JFrame {
         tblAdministracion.getTableHeader().getColumnModel().getColumn(0).setMaxWidth(0);
         tblAdministracion.getTableHeader().getColumnModel().getColumn(0).setMinWidth(0);
         calAdministracion.setDate(hoy);
+        
         llenarComboDestinos();
         llenarComboOrigenes();
         llenarComboEmpresas();
