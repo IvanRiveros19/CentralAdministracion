@@ -3,6 +3,8 @@ package vistas;
 import modelo.conexion.Conexion;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -19,10 +22,13 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import modelo.dao.ReporteDAO;
+import modelo.dao.toExcel;
 import modelo.dto.ReporteDTO;
 
 public class Reporte extends javax.swing.JFrame {
@@ -30,6 +36,7 @@ public class Reporte extends javax.swing.JFrame {
     private Connection conexion = Conexion.getConnection();
     private int idActual;
 
+    Date selectionedDate;
     private ReporteDTO reporteDTO;
     private ReporteDAO reporteDAO = new ReporteDAO();
 
@@ -44,22 +51,41 @@ public class Reporte extends javax.swing.JFrame {
         this.setContentPane(fondo);
         initComponents();
 
+        calAdministracion.getDateEditor().addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent e) {
+                if ("date".equals(e.getPropertyName())) {
+                    selectionedDate = calAdministracion.getDate();
+                    llenarTabla(dbDateFormat.format(selectionedDate));
+                }
+            }
+        });
+
         tblAdministracion.getColumnModel().getColumn(0).setMaxWidth(0);
         tblAdministracion.getColumnModel().getColumn(0).setMinWidth(0);
         tblAdministracion.getTableHeader().getColumnModel().getColumn(0).setMaxWidth(0);
         tblAdministracion.getTableHeader().getColumnModel().getColumn(0).setMinWidth(0);
-
+        calAdministracion.setDate(hoy);
+        
         llenarComboDestinos();
         llenarComboOrigenes();
         llenarComboEmpresas();
-        llenarTabla();
+
+        noEditables();
+
     }
 
-    public void llenarTabla() {
+    public void noEditables(){
+        ((DefaultEditor) txtHora.getEditor()).getTextField().setEditable(false);
+        ((DefaultEditor) txtMinutos.getEditor()).getTextField().setEditable(false);
+
+    }
+
+    public void llenarTabla(String fecha) {
         DefaultTableModel model = (DefaultTableModel) tblAdministracion.getModel();
         model.setRowCount(0);
         try {
-            ResultSet rs = reporteDAO.llenarTabla();
+            ResultSet rs = reporteDAO.llenarTabla(fecha);
             while (rs.next()) {
                 Vector v = new Vector();
                 v.add(rs.getString("ID"));
@@ -77,7 +103,7 @@ public class Reporte extends javax.swing.JFrame {
                 model.addRow(v);
             }
             rs.close();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             System.out.println(e);
         }
         tblAdministracion.setModel(model);
@@ -126,7 +152,7 @@ public class Reporte extends javax.swing.JFrame {
     }
 
     public void limpiar() {
-        calAdministracion.setDate(null);
+        calAdministracion.setDate(hoy);
         calAdministracion.setToolTipText(null);
         txtHora.setValue("00");
         txtMinutos.setValue("00");
@@ -407,7 +433,7 @@ public class Reporte extends javax.swing.JFrame {
                 btnModificarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnModificar, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 610, -1, -1));
+        getContentPane().add(btnModificar, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 560, -1, -1));
 
         btnEliminar.setBackground(new java.awt.Color(255, 102, 102));
         btnEliminar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
@@ -418,7 +444,7 @@ public class Reporte extends javax.swing.JFrame {
                 btnEliminarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnEliminar, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 610, -1, -1));
+        getContentPane().add(btnEliminar, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 560, -1, -1));
 
         btnAdd.setBackground(new java.awt.Color(102, 255, 102));
         btnAdd.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
@@ -428,8 +454,9 @@ public class Reporte extends javax.swing.JFrame {
                 btnAddActionPerformed(evt);
             }
         });
-        getContentPane().add(btnAdd, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 610, -1, -1));
+        getContentPane().add(btnAdd, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 560, -1, -1));
 
+        btnLimpiar.setBackground(new java.awt.Color(153, 51, 255));
         btnLimpiar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         btnLimpiar.setText("Limpiar");
         btnLimpiar.addActionListener(new java.awt.event.ActionListener() {
@@ -437,8 +464,9 @@ public class Reporte extends javax.swing.JFrame {
                 btnLimpiarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnLimpiar, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 650, -1, -1));
+        getContentPane().add(btnLimpiar, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 620, -1, -1));
 
+        btnCancelar.setBackground(new java.awt.Color(255, 153, 0));
         btnCancelar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         btnCancelar.setText("Cancelar");
         btnCancelar.addActionListener(new java.awt.event.ActionListener() {
@@ -446,13 +474,14 @@ public class Reporte extends javax.swing.JFrame {
                 btnCancelarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnCancelar, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 650, -1, -1));
+        getContentPane().add(btnCancelar, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 620, -1, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void lblArchivosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblArchivosMouseClicked
-        // TODO add your handling code here:
+        Date date = calAdministracion.getDate();
+        new toExcel().generateCSVfile(calendarDateFormat.format(date));
     }//GEN-LAST:event_lblArchivosMouseClicked
 
     private void lblAddorigenMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblAddorigenMouseClicked
@@ -523,7 +552,7 @@ public class Reporte extends javax.swing.JFrame {
             btnAdd.setEnabled(true);
             btnModificar.setEnabled(false);
             btnEliminar.setEnabled(false);
-            llenarTabla();
+            llenarTabla(dbDateFormat.format(selectionedDate));
         }
     }//GEN-LAST:event_btnModificarActionPerformed
 
@@ -533,7 +562,7 @@ public class Reporte extends javax.swing.JFrame {
         btnModificar.setEnabled(false);
         btnEliminar.setEnabled(false);
         limpiar();
-        llenarTabla();
+        llenarTabla(dbDateFormat.format(selectionedDate));
     }//GEN-LAST:event_btnEliminarActionPerformed
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
@@ -554,7 +583,8 @@ public class Reporte extends javax.swing.JFrame {
             reporteDTO.setNumeroSalida(Integer.parseInt(txtNosalida.getText().trim()));
 
             reporteDAO.insertar(reporteDTO);
-            llenarTabla();
+            llenarTabla(dbDateFormat.format(selectionedDate));
+            limpiar();
         }
     }//GEN-LAST:event_btnAddActionPerformed
 
