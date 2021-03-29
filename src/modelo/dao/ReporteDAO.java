@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import javax.swing.JOptionPane;
+import logs.Log;
 import modelo.conexion.Conexion;
 import modelo.dto.ReporteDTO;
 
@@ -24,9 +25,10 @@ public class ReporteDAO {
 
     public ResultSet llenarTabla(String fecha) {
         try {
-            sql = "SELECT `treporte`.`ID`, `NUMERO`, date_format(`HORA_SALIDA`, '%h:%i') AS 'HORA_SALIDA', `corigen`.`NOMBRE` AS 'ORIGEN', "
+            sql = "SELECT `treporte`.`ID`, `NUMERO`, date_format(`HORA_SALIDA`, '%H:%i') AS 'HORA_SALIDA', `corigen`.`NOMBRE` AS 'ORIGEN', "
                     + "`cdestino`.`NOMBRE` AS 'DESTINO', `cempresa`.`NOMBRE` AS 'EMPRESA', `TIPO_SERVICIO`, "
-                    + "`TIPO_CORRIDA`, `NUMERO_ECONOMICO`, `NUMERO_PASAJEROS`, `NUMERO_SALIDA`, date_format(`FECHA`, '%d/%m/%Y') AS 'FECHA_SALIDA' "
+                    + "`TIPO_CORRIDA`, `NUMERO_ECONOMICO`, `NUMERO_PASAJEROS`, `NUMERO_SALIDA`, "
+                    + "date_format(`FECHA`, '%d/%m/%Y') AS 'FECHA_SALIDA', `CANCELADA` "
                     + "FROM `treporte` "
                     + "INNER JOIN `corigen` ON `treporte`.`CORIGEN_ID`=`corigen`.`ID` "
                     + "INNER JOIN `cdestino` ON `treporte`.`CDESTINO_ID`=`cdestino`.`ID` "
@@ -37,7 +39,7 @@ public class ReporteDAO {
             stmt.executeQuery(sql);
             rs = stmt.getResultSet();
         } catch (SQLException ex) {
-            System.out.println("Error en la consulta: " + ex);
+            Log.createLog("Error al consultar datos principales: " + ex);
         }
         return rs;
     }
@@ -49,7 +51,7 @@ public class ReporteDAO {
             stmt.executeQuery(sql);
             rs = stmt.getResultSet();
         } catch (Exception e) {
-            System.out.print(e);
+            Log.createLog("Error al cargar origenes: " + e);
         }
         return rs;
     }
@@ -61,7 +63,7 @@ public class ReporteDAO {
             stmt.executeQuery(sql);
             rs = stmt.getResultSet();
         } catch (Exception e) {
-            System.out.print(e);
+            Log.createLog("Error al cargar destinos: " + e);
         }
         return rs;
     }
@@ -73,7 +75,7 @@ public class ReporteDAO {
             stmt.executeQuery(sql);
             rs = stmt.getResultSet();
         } catch (Exception e) {
-            System.out.print(e);
+            Log.createLog("Error al cargar empresas: " + e);
         }
         return rs;
     }
@@ -85,13 +87,12 @@ public class ReporteDAO {
                     + "(SELECT `ID` FROM `cdestino` WHERE `NOMBRE`='" + reporte.getDestino() + "'),"
                     + "(SELECT `ID` FROM `cempresa` WHERE `NOMBRE`='" + reporte.getEmpresa() + "'),"
                     + "'" + reporte.getTipoServicio() + "','" + reporte.getTipoCorrida() + "','" + reporte.getNumeroEconomico() + "','"
-                    + reporte.getNumeroPasajeros() + "','" + reporte.getNumeroSalida() + "', 1, '" + reporte.getFecha() + "', now());";
+                    + reporte.getNumeroPasajeros() + "','" + reporte.getNumeroSalida() + "', " + reporte.getIsCancelada() + ", '" + reporte.getFecha() + "', now());";
             PreparedStatement s = conexion.prepareStatement(sql);
-            System.out.println("insertar: " + sql);
             s.executeUpdate();
             JOptionPane.showMessageDialog(null, "Información agregada con éxito");
         } catch (HeadlessException | SQLException e) {
-            System.out.println("Error al registrar: " + e);
+            Log.createLog("Error al guardad corrida: " + e);
             JOptionPane.showMessageDialog(null, "Ocurrió un error al registrar su información");
         }
     }
@@ -109,7 +110,7 @@ public class ReporteDAO {
             rs.close();
             maximo++;
         } catch (SQLException e) {
-            System.out.println(e);
+            Log.createLog("Error en proceso de registrar corrida: " + e);
         }
         return maximo;
     }
@@ -122,12 +123,13 @@ public class ReporteDAO {
                     + "`CEMPRESA_ID`=(SELECT `ID` FROM `cempresa` WHERE `NOMBRE`='" + reporte.getEmpresa() + "'),"
                     + "`TIPO_SERVICIO`='" + reporte.getTipoServicio() + "', `TIPO_CORRIDA`='" + reporte.getTipoCorrida() + "', "
                     + "`NUMERO_ECONOMICO`=" + reporte.getNumeroEconomico() + ",`NUMERO_PASAJEROS`=" + reporte.getNumeroPasajeros() + ", "
-                    + "`NUMERO_SALIDA`=" + reporte.getNumeroSalida() + " "
+                    + "`NUMERO_SALIDA`=" + reporte.getNumeroSalida() + ", `CANCELADA`=" + reporte.getIsCancelada() + " "
                     + "WHERE `ID`=" + reporte.getId() + ";";
             PreparedStatement s = conexion.prepareStatement(sql);
             s.executeUpdate();
             JOptionPane.showMessageDialog(null, "Información actualizada");
         } catch (HeadlessException | SQLException e) {
+            Log.createLog("Error al modificar corrida: " + e);
             JOptionPane.showMessageDialog(null, "Ocurrió un error al actualizar el registro");
         }
     }
@@ -135,11 +137,11 @@ public class ReporteDAO {
     public void eliminar(int id) {
         try {
             sql = "DELETE FROM `treporte` WHERE `ID`=" + id + ";";
-            System.out.println(sql);
             PreparedStatement s = conexion.prepareStatement(sql);
             s.executeUpdate();
             JOptionPane.showMessageDialog(null, "Registro eliminado");
         } catch (HeadlessException | SQLException e) {
+            Log.createLog("Error al eliminar corrida: " + e);
             JOptionPane.showMessageDialog(null, "Ocurrió un error al eliminar el registro");
         }
     }
@@ -158,7 +160,7 @@ public class ReporteDAO {
             stmt.executeQuery(sql);
             rs = stmt.getResultSet();
         } catch (Exception e) {
-            System.out.print(e);
+            Log.createLog("Error al cargar corridas: " + e);
         }
         return rs;
     }
@@ -187,7 +189,7 @@ public class ReporteDAO {
             stmt.executeQuery(sql);
             rs = stmt.getResultSet();
         } catch (Exception e) {
-            System.out.print("Error al consultar registros por mes: " + e);
+            Log.createLog("Error al cargar corridas: " + e);
         }
         return toArrayList(rs);
     }
@@ -216,7 +218,7 @@ public class ReporteDAO {
             stmt.executeQuery(sql);
             rs = stmt.getResultSet();
         } catch (Exception e) {
-            System.out.print("Error al consultar registros por mes: " + e);
+            Log.createLog("Error al cargar corridas: " + e);
         }
         return toArrayList(rs);
     }
@@ -241,7 +243,7 @@ public class ReporteDAO {
             stmt.executeQuery(sql);
             rs = stmt.getResultSet();            
         } catch (SQLException e) {
-            System.out.println(e);
+            Log.createLog("Error al cargar datos de resumen: " + e);
         }
         return toArrayList(rs);
     }
@@ -264,7 +266,7 @@ public class ReporteDAO {
             }
             rs.close();
         } catch (SQLException ex) {
-            System.out.println("Error al convertir en ArrayList");
+            Log.createLog("Error al convertir datos: " + ex);
         }
         return results;
     }

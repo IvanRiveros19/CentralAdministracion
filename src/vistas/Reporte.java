@@ -27,8 +27,9 @@ import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import logs.Log;
 import modelo.dao.ReporteDAO;
-import modelo.dao.toExcel;
+import modelo.dao.ToExcel;
 import modelo.dto.ReporteDTO;
 
 public class Reporte extends javax.swing.JFrame {
@@ -100,11 +101,13 @@ public class Reporte extends javax.swing.JFrame {
                 v.add(rs.getString("NUMERO_PASAJEROS"));
                 v.add(rs.getString("NUMERO_SALIDA"));
                 v.add(rs.getString("FECHA_SALIDA"));
+                String estadoCorrida = rs.getString("CANCELADA").equals("1") ? "Cancelada" : "Completada";
+                v.add(estadoCorrida);
                 model.addRow(v);
             }
             rs.close();
         } catch (Exception e) {
-            System.out.println(e);
+            Log.createLog("Error al llenar tabla principal: " + e);
         }
         tblAdministracion.setModel(model);
     }
@@ -118,7 +121,7 @@ public class Reporte extends javax.swing.JFrame {
             }
             rs.close();
         } catch (Exception e) {
-            System.out.print(e);
+            Log.createLog("Error al origenes: " + e);
         }
         cmbOrigen.setModel(model);
     }
@@ -132,7 +135,7 @@ public class Reporte extends javax.swing.JFrame {
             }
             rs.close();
         } catch (Exception e) {
-            System.out.print(e);
+            Log.createLog("Error al llenar destinos: " + e);
         }
         cmbDestino.setModel(model);
     }
@@ -146,7 +149,7 @@ public class Reporte extends javax.swing.JFrame {
             }
             rs.close();
         } catch (Exception e) {
-            System.out.print(e);
+            Log.createLog("Error al llenar empresas: " + e);
         }
         cmbEmpresa.setModel(model);
     }
@@ -164,10 +167,10 @@ public class Reporte extends javax.swing.JFrame {
         txtNoeconomico.setText("");
         txtNopasajeros.setText("");
         txtNosalida.setText("");
+        canceledCheck.setSelected(false);
     }
 
     public boolean validarCampos() {
-        String mensaje = "";
         Matcher matcher = null;
         Pattern digitosPattern = Pattern.compile("^[0-9]+$");
 
@@ -242,6 +245,8 @@ public class Reporte extends javax.swing.JFrame {
         btnAdd = new javax.swing.JButton();
         btnLimpiar = new javax.swing.JButton();
         btnCancelar = new javax.swing.JButton();
+        lblNosalida1 = new javax.swing.JLabel();
+        canceledCheck = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setExtendedState(6);
@@ -252,14 +257,14 @@ public class Reporte extends javax.swing.JFrame {
 
             },
             new String [] {
-                "ID", "No.", "Hora Salida", "Origen", "Destino", "Empresa", "Tipo Servicio", "Tipo Corrida", "No. Eco. Autobus", "No. Pasajeros", "No. Salida", "Fecha"
+                "ID", "No.", "Hora Salida", "Origen", "Destino", "Empresa", "Tipo Servicio", "Tipo Corrida", "No. Eco. Autobus", "No. Pasajeros", "No. Salida", "Fecha", "Estado"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Object.class
+                java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Object.class, java.lang.Object.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, false, false, false, false
+                false, false, false, false, false, false, false, false, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -283,9 +288,6 @@ public class Reporte extends javax.swing.JFrame {
         if (tblAdministracion.getColumnModel().getColumnCount() > 0) {
             tblAdministracion.getColumnModel().getColumn(0).setResizable(false);
             tblAdministracion.getColumnModel().getColumn(0).setPreferredWidth(0);
-            tblAdministracion.getColumnModel().getColumn(1).setResizable(false);
-            tblAdministracion.getColumnModel().getColumn(2).setResizable(false);
-            tblAdministracion.getColumnModel().getColumn(3).setResizable(false);
         }
 
         getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 130, 1000, 450));
@@ -304,8 +306,8 @@ public class Reporte extends javax.swing.JFrame {
         getContentPane().add(lblAdministracion, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 10, 1370, 90));
 
         lblNosalida.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        lblNosalida.setText("No. Salida");
-        getContentPane().add(lblNosalida, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 490, -1, -1));
+        lblNosalida.setText("Corrida Cancelada:");
+        getContentPane().add(lblNosalida, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 530, -1, -1));
 
         lblAddempresa.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         lblAddempresa.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -433,7 +435,7 @@ public class Reporte extends javax.swing.JFrame {
                 btnModificarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnModificar, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 560, -1, -1));
+        getContentPane().add(btnModificar, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 590, -1, -1));
 
         btnEliminar.setBackground(new java.awt.Color(255, 102, 102));
         btnEliminar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
@@ -444,7 +446,7 @@ public class Reporte extends javax.swing.JFrame {
                 btnEliminarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnEliminar, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 560, -1, -1));
+        getContentPane().add(btnEliminar, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 590, -1, -1));
 
         btnAdd.setBackground(new java.awt.Color(102, 255, 102));
         btnAdd.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
@@ -454,7 +456,7 @@ public class Reporte extends javax.swing.JFrame {
                 btnAddActionPerformed(evt);
             }
         });
-        getContentPane().add(btnAdd, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 560, -1, -1));
+        getContentPane().add(btnAdd, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 590, -1, -1));
 
         btnLimpiar.setBackground(new java.awt.Color(153, 51, 255));
         btnLimpiar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
@@ -464,7 +466,7 @@ public class Reporte extends javax.swing.JFrame {
                 btnLimpiarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnLimpiar, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 620, -1, -1));
+        getContentPane().add(btnLimpiar, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 650, -1, -1));
 
         btnCancelar.setBackground(new java.awt.Color(255, 153, 0));
         btnCancelar.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
@@ -474,14 +476,22 @@ public class Reporte extends javax.swing.JFrame {
                 btnCancelarActionPerformed(evt);
             }
         });
-        getContentPane().add(btnCancelar, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 620, -1, -1));
+        getContentPane().add(btnCancelar, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 650, -1, -1));
+
+        lblNosalida1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        lblNosalida1.setText("No. Salida");
+        getContentPane().add(lblNosalida1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 490, -1, -1));
+
+        canceledCheck.setBackground(new java.awt.Color(102, 255, 102));
+        getContentPane().add(canceledCheck, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 530, -1, 30));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void lblArchivosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblArchivosMouseClicked
         Date date = calAdministracion.getDate();
-        new toExcel().generateCSVfile(calendarDateFormat.format(date));
+        new ToExcel().generarReporteMes(date);
+        new ToExcel().generarReporteDia(date);
     }//GEN-LAST:event_lblArchivosMouseClicked
 
     private void lblAddorigenMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblAddorigenMouseClicked
@@ -524,6 +534,8 @@ public class Reporte extends javax.swing.JFrame {
             txtNoeconomico.setText(String.valueOf(tblAdministracion.getValueAt(index, 8)));
             txtNopasajeros.setText(String.valueOf(tblAdministracion.getValueAt(index, 9)));
             txtNosalida.setText(String.valueOf(tblAdministracion.getValueAt(index, 10)));
+            boolean checked = String.valueOf(tblAdministracion.getValueAt(index, 12)).equals("Cancelada");
+            canceledCheck.setSelected(checked);
         } catch (ParseException ex) {
             Logger.getLogger(Reporte.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -546,7 +558,8 @@ public class Reporte extends javax.swing.JFrame {
             reporteDTO.setNumeroEconomico(Integer.parseInt(String.valueOf(txtNoeconomico.getText().trim())));
             reporteDTO.setNumeroPasajeros(Integer.parseInt(String.valueOf(txtNopasajeros.getText().trim())));
             reporteDTO.setNumeroSalida(Integer.parseInt(String.valueOf(txtNosalida.getText().trim())));
-
+            reporteDTO.setIsCancelada(canceledCheck.isSelected());
+            
             reporteDAO.actualizar(reporteDTO);
             limpiar();
             btnAdd.setEnabled(true);
@@ -569,7 +582,6 @@ public class Reporte extends javax.swing.JFrame {
         if (validarCampos()) {
             Date date = calAdministracion.getDate();
             String fechaSeleccionada = String.valueOf(dbDateFormat.format(date));
-
             reporteDTO = new ReporteDTO();
             reporteDTO.setFecha(fechaSeleccionada);
             reporteDTO.setHoraSalida(txtHora.getValue() + ":" + txtMinutos.getValue());
@@ -581,6 +593,7 @@ public class Reporte extends javax.swing.JFrame {
             reporteDTO.setNumeroEconomico(Integer.parseInt(txtNoeconomico.getText().trim()));
             reporteDTO.setNumeroPasajeros(Integer.parseInt(txtNopasajeros.getText().trim()));
             reporteDTO.setNumeroSalida(Integer.parseInt(txtNosalida.getText().trim()));
+            reporteDTO.setIsCancelada(canceledCheck.isSelected());
 
             reporteDAO.insertar(reporteDTO);
             llenarTabla(dbDateFormat.format(selectionedDate));
@@ -643,6 +656,7 @@ public class Reporte extends javax.swing.JFrame {
     private javax.swing.JButton btnLimpiar;
     public javax.swing.JButton btnModificar;
     public com.toedter.calendar.JDateChooser calAdministracion;
+    private javax.swing.JCheckBox canceledCheck;
     public javax.swing.JComboBox<String> cmbDestino;
     public javax.swing.JComboBox<String> cmbEmpresa;
     public javax.swing.JComboBox<String> cmbOrigen;
@@ -662,6 +676,7 @@ public class Reporte extends javax.swing.JFrame {
     private javax.swing.JLabel lblNoeconomico;
     private javax.swing.JLabel lblNopasajeros;
     private javax.swing.JLabel lblNosalida;
+    private javax.swing.JLabel lblNosalida1;
     private javax.swing.JLabel lblOrigen;
     private javax.swing.JLabel lblTipocorrida;
     private javax.swing.JLabel lblTiposervicio;
