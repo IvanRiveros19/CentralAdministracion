@@ -8,7 +8,7 @@ import java.sql.Statement;
 import javax.swing.JOptionPane;
 import modelo.conexion.Conexion;
 
-public class DestinoDAO {
+public class DestinoDAO { 
     private Connection conexion = Conexion.getConnection();
     private ResultSet rs;
     private String sql;

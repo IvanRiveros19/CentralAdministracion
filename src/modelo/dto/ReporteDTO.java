@@ -1,5 +1,4 @@
 package modelo.dto;
-import java.util.Date;
 
 public class ReporteDTO {
     private int id;
@@ -14,6 +13,7 @@ public class ReporteDTO {
     private int numeroPasajeros;
     private int numeroSalida;
     private String fecha;
+    private boolean isCancelada;
     
     public int getId() {
         return id;
@@ -110,5 +110,14 @@ public class ReporteDTO {
     public void setFecha(String fecha) {
         this.fecha = fecha;
     }
+
+    public boolean getIsCancelada() {
+        return isCancelada;
+    }
+
+    public void setIsCancelada(boolean cancelada) {
+        this.isCancelada = cancelada;
+    }
+    
     
 }

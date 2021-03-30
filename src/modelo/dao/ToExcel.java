@@ -2,23 +2,19 @@ package modelo.dao;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import logs.Log;
 import org.apache.poi.POIXMLProperties;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Drawing;
@@ -642,9 +638,9 @@ public class ToExcel {
             salida = new FileOutputStream(file);
             workbook.write(salida);
             workbook.close();
-            System.out.println("Archivo creado existosamente en " + file.getAbsolutePath());
+            JOptionPane.showMessageDialog(null, "Archivo creado existosamente en " + file.getAbsolutePath());
         } catch (Exception ex) {
-            System.out.println("Ocurrió un error al guardar el archivo: " + ex);
+            Log.createLog("Ocurrió un error al guardar el archivo: " + ex);
         }
     }
 
